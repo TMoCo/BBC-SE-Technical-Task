@@ -1,2 +1,7 @@
-# BBC-SE-Technical-Task
-Technical task set by the BBC Software Engineering graduate scheme
+# BBC Software Engineering Graduate Scheme Technical Task
+
+## Overview
+
+## Assumptions
+
+## Design Decisions
