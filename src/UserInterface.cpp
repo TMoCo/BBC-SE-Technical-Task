@@ -50,23 +50,27 @@ void UserInterface::set(Blackjack* blackjack)
     ImGui::EndMenuBar();
   }
 
-  static Player& playerOne = blackjack->players[blackjack->players.size() - 1];
+  static Player& playerOne = blackjack->players.front();
   
   if (ImGui::Button("Hit", { width * 0.485f, height * 0.2f }))
   {
     playerOne.action = Action::HIT;
-    Log::add("You chose to HIT.\n");
   }
   ImGui::SameLine(0.0f);
   if (ImGui::Button("Stand", { width * 0.485f, height * 0.2f }))
   {
     playerOne.action = Action::STAND;
-    Log::add("You chose to STAND.\n");
   }
   ImGui::Separator();
 
   ImGui::BeginChild("Log", { width * 0.485f, height * 0.7f });
   Log::draw();
+  
+  if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+  {
+    ImGui::SetScrollHereY(1.0f);
+  }
+
   ImGui::EndChild();
 
   // ImGui::ShowDemoWindow();

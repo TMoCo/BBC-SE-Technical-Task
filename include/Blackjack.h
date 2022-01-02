@@ -32,9 +32,7 @@ private:
 
   void terminate();
 
-  void printCard(uint32_t cardId) const;
-
-  const char* setCardString(char* string, size_t count, uint32_t carId) const;
+  void getWinners();
 
 protected:
   Window window;

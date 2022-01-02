@@ -12,42 +12,64 @@
 #include <iostream>
 
 Player::Player(bool isAi)
-  : isAi{ isAi }, state{ PlayerState::PLAYING }, hand{}, action{ Action::NONE }
+  : isAi{ isAi }, state{ PlayerState::PLAYING }, hand{}, action{ Action::NONE }, score{ 0 }
 { }
 
 void Player::setCardBit(uint32_t cardId)
 {
-  hand[cardId / CARDS_PER_SUITE] |= 1 << (cardId % CARDS_PER_SUITE);
+  hand[cardId / CARD_RANKS] |= 1 << (cardId % CARD_RANKS);
 }
 
 uint32_t Player::getScore()
 {
-  uint32_t score = 0;
+  score = 0;
 
-  for (uint32_t i = 1; i < CARDS_PER_SUITE; ++i)
+  // count times the bit is set for each suite
+  for (uint32_t i = 1; i < CARD_RANKS; ++i)
   {
-    uint32_t card = 1 << i, value = SCORES[i - 1];
-    // get number of cards of a given suite and add their value if bit is set
-    score += ((hand[0] & card) + (hand[1] & card) + (hand[2] & card) + (hand[3] & card)) * value >> i;
+    score += countCardRankBits(i) * CARD_VALUES[i - 1];
   }
   
   // handle aces separately
-  uint32_t aces = ((hand[0] & 1) + (hand[1] & 1) + (hand[2] & 1) + (hand[3] & 1)) * 11;
+  uint32_t aces = countCardRankBits(0) * 11;
   while (score + aces > 21 && aces > 4) // stop if aces can't be minimised or we have a valid score
   {
     aces -= 10;
   }
 
-  return score + aces;
+  score += aces;
+
+  return score;
+}
+
+uint32_t Player::countCardRankBits(uint32_t cardRank)
+{
+  uint32_t count = 0, rankBit = 1 << cardRank;
+  for (uint32_t i = 0; i < CARDS_TOTAL / CARD_RANKS; ++i)
+  {
+    count += (hand[i] & rankBit);
+  }
+  return count >> cardRank;
+}
+
+uint32_t Player::countCards()
+{
+  uint32_t count = 0; // accumulate the total bits set in hand
+  for (uint32_t i = 0; i < CARDS_TOTAL / CARD_RANKS; ++i)
+  {
+    uint16_t suite = hand[i];
+    for (; suite; count++)
+    {
+      suite &= suite - 1; // clear the least significant bit set
+    }
+  }
+  return count;
 }
 
 Action Player::determineAction(Blackjack* game)
 {
-  // based on player's score, determine action to take
-  uint32_t score = getScore();
-
   // determine if player has an ace
-  if ((hand[0] & 1) | (hand[1] & 1) | (hand[2] & 1) | (hand[3] & 1))
+  if (countCardRankBits(1))
   {
     if (score < 13)
     {

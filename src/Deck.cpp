@@ -14,7 +14,7 @@ Deck::Deck(bool shuffle)
   : cards{}, topOfDeck{ 0 }
 {
   // populate cards
-  for (uint32_t i = 0; i < NUM_CARDS; ++i)
+  for (uint32_t i = 0; i < CARDS_TOTAL; ++i)
   {
     cards[i] = i;
   }
@@ -23,7 +23,7 @@ Deck::Deck(bool shuffle)
   {
     static std::random_device rd;
     static std::mt19937 generator(rd());
-    static std::uniform_int_distribution<uint32_t> distribution(0, NUM_CARDS - 1);
+    static std::uniform_int_distribution<uint32_t> distribution(0, CARDS_TOTAL - 1);
 
     // swap cards arbitrarily
     for (int i = 0; i < 10000; ++i)
@@ -35,10 +35,10 @@ Deck::Deck(bool shuffle)
 
 uint32_t Deck::draw()
 {
-  if (topOfDeck == NUM_CARDS)
+  if (topOfDeck == CARDS_TOTAL)
   {
     std::cerr << "Error! No cards remaining to draw." << std::endl;
-    return (uint32_t) topOfDeck;
+    return topOfDeck;
   }
 
   return cards[topOfDeck++];

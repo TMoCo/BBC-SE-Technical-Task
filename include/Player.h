@@ -13,6 +13,8 @@
 #include <cstdint>
 #include <vector>
 
+#include <Deck.h>
+
 constexpr int MAX_NUM_PLAYERS = 9;
 constexpr int MIN_NUM_PLAYERS = 5;
 
@@ -43,14 +45,20 @@ public:
 
   Action determineAction(Blackjack* game);
 
+  uint32_t countCardRankBits(uint32_t rank);
+
+  uint32_t countCards();
+
 public:
   PlayerState state;
 
-  uint16_t hand[4];
+  uint16_t hand[CARDS_TOTAL / CARD_RANKS];
+
+  uint32_t score;
 
   Action action;
   
-  const bool isAi;
+  bool isAi;
 };
 
 #endif // !PLAYER_H
