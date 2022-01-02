@@ -10,7 +10,7 @@
 #include <Deck.h>
 
 Player::Player(bool isAi)
-  : isAi{ isAi }, state{ PlayerState::PLAYING }, hand{}
+  : isAi{ isAi }, state{ PlayerState::PLAYING }, hand{}, action{ Action::NONE }
 { }
 
 void Player::setCardBit(uint32_t cardId)

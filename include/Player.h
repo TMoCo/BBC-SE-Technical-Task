@@ -24,6 +24,13 @@ enum PlayerState : uint32_t
   CHOOSING
 };
 
+enum Action : uint32_t
+{
+  NONE,
+  HIT,
+  STAND
+};
+
 class Player
 {
 public:
@@ -37,6 +44,8 @@ public:
   PlayerState state;
 
   uint32_t hand[4];
+
+  Action action;
   
   const bool isAi;
 };

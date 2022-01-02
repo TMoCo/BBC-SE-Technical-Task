@@ -7,11 +7,38 @@
 */
 
 #include <Blackjack.h>
+#include <UserInterface.h>
 #include <iostream>
+#include <thomath.h> // personal maths library
 
 Blackjack::Blackjack()
   : deck{ true }
 { }
+
+int Blackjack::init()
+{
+  if (!glfwInit())
+  {
+    std::cerr << "Error! Could not initialise GLFW." << std::endl;
+    return -1;
+  }
+
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+  window = { DEFAULT_WIDTH, DEFAULT_HEIGHT, "Blackjack" };
+
+  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+  {
+    std::cerr << "Error! Could not initialise Glad." << std::endl;
+    return -1;
+  }
+
+  UserInterface::get().init(&window);
+
+  return 0;
+}
 
 int Blackjack::play(int numPlayers)
 {
@@ -21,10 +48,16 @@ int Blackjack::play(int numPlayers)
     return -1;
   }
 
+  if (init() != 0)
+  {
+    std::cerr << "Error! Could not initialise the game." << std::endl;
+    return -1;
+  }
+
   players.resize((size_t)numPlayers - 1);
   players.push_back({ false });
 
-  // all players draw 1 card
+  // all players start by drawing 1 card
   for (int i = 0; i < players.size(); ++i)
   {
     uint32_t card = deck.draw();
@@ -37,35 +70,30 @@ int Blackjack::play(int numPlayers)
   uint32_t stopMask = 0;
   uint32_t allStopMask = (1 << (numPlayers)) - 1;
   
-  Action action = Action::NONE;
+  glClearColor(0.0f, 0.69921f, 0.23437f, 1.0f);
 
   while (true)
   {
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    UserInterface::get().set(this);
 
     // process turn only if they can play
     if (!(stopMask & (1 << currentPlayer)))
     {
       if (players[currentPlayer].isAi)
       {
-        action = Action::HIT; // ai always draws for now
-      }
-      else
-      {
-        // get from user, actions depend on state
-        std::cout << "Your turn! What is your move (1 = hit, 2 = stand): ";
-        int a;
-        std::cin >> a;
-        action = (Action)a;
+        players[currentPlayer].action = Action::HIT; // ai always draws for now
       }
 
       std::cout << "\n\nPlayer " << currentPlayer + 1 << "'s turn!\n";
-      std::cout << "Action taken: " << action << "\n";
+      std::cout << "Action taken: " << players[currentPlayer].action << "\n";
       std::cout << !(stopMask & (1 << currentPlayer)) << "\n";
 
       // user input here determines action taken
-      if (action != Action::NONE)
+      if (players[currentPlayer].action != Action::NONE)
       {
-        if (action == Action::HIT)
+        if (players[currentPlayer].action == Action::HIT)
         {
           // draw a card
           uint32_t card = deck.draw();
@@ -86,19 +114,21 @@ int Blackjack::play(int numPlayers)
             stopMask |= 1 << currentPlayer;
           }
         }
-        else if (action == Action::STAND)
+        else if (players[currentPlayer].action == Action::STAND)
         {
           // don't draw any more cards
           players[currentPlayer].state = PlayerState::STANDING;
           stopMask |= 1 << currentPlayer;
         }
 
-        // next player
+        // reset player action and advance to next player
+        players[currentPlayer].action = Action::NONE;
         currentPlayer = ++currentPlayer == players.size() ? 0 : currentPlayer;
       }
     }
     else
     {
+      players[currentPlayer].action = Action::NONE;
       currentPlayer = ++currentPlayer == players.size() ? 0 : currentPlayer;
     }
 
@@ -109,8 +139,6 @@ int Blackjack::play(int numPlayers)
       break;
     }
 
-    action = Action::NONE; // reset action
-
     /*
     if (players[numPlayers - 1].state == PlayerState::BUST)
     {
@@ -119,9 +147,23 @@ int Blackjack::play(int numPlayers)
       break;
     }
     */
+
+    UserInterface::get().draw();
+
+    window.swap();
+    glfwPollEvents();
   }
 
   return 0;
+}
+
+void Blackjack::terminate()
+{
+  UserInterface::get().terminate();
+
+  glfwDestroyWindow(window.pWinGLFW);
+
+  glfwTerminate();
 }
 
 void Blackjack::printCard(uint32_t cardId) const

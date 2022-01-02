@@ -18,13 +18,22 @@ constexpr uint32_t DEFAULT_HEIGHT = 600;
 
 class Window
 {
+  friend class UserInterface;
+  friend class Blackjack;
+
 public:
   Window();
 
-  Window(uint32_t width, uint32_t height, const char* name = "Window");
+  Window(uint32_t width, uint32_t height, const char* name = "Window", bool makeCurrent = true);
 
-private:
+  static void onResize(GLFWwindow* window, int width, int height);
+
+  void swap();
+
+protected:
   GLFWwindow* pWinGLFW;
+
+  uint32_t width, height;
 };
 
 

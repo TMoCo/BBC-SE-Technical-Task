@@ -47,7 +47,7 @@ constexpr uint32_t SCORES[12] = { 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10 }; // o
 class Deck
 {
 public:
-  Deck(bool shuffle);
+  Deck(bool shuffle = false);
 
   uint32_t draw();
 

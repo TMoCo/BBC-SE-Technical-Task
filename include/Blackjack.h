@@ -12,28 +12,31 @@
 
 #include <Player.h>
 #include <Deck.h>
-
-enum Action : uint32_t
-{
-  NONE,
-  HIT,
-  STAND
-};
-
+#include <glad/glad.h> // must be before glfw
+#include <Window.h>
 
 class Blackjack
 {
+  friend class UserInterface;
+
 public:
   Blackjack();
 
   int play(int numPlayers);
 
 private:
+  int init();
+
+  void terminate();
+
   void printCard(uint32_t cardId) const;
 
-  std::vector<Player> players;
+protected:
+  Window window;
 
   Deck deck;
+
+  std::vector<Player> players;
 };
 
 #endif // !BLACKJACK_H 
