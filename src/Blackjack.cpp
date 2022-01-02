@@ -58,11 +58,14 @@ int Blackjack::play(int numPlayers)
   players.push_back({ false });
 
   // all players start by drawing 1 card
+  char cardString[25] = {};
   for (int i = 0; i < players.size(); ++i)
   {
     uint32_t card = deck.draw();
-    printCard(card);
+    setCardString(cardString, 25, card);
+    Log::add("Player %u drew %s\n", i + 1, cardString);
     players[i].setCardBit(card);
+    Log::add("Updated score is %u\n", players[i].getScore());
   }
 
   size_t currentPlayer = players.size() - 1;
@@ -72,7 +75,7 @@ int Blackjack::play(int numPlayers)
   
   glClearColor(0.0f, 0.69921f, 0.23437f, 1.0f);
 
-  while (true)
+  while (!glfwWindowShouldClose(window.pWinGLFW))
   {
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -86,10 +89,6 @@ int Blackjack::play(int numPlayers)
         players[currentPlayer].action = Action::HIT; // ai always draws for now
       }
 
-      std::cout << "\n\nPlayer " << currentPlayer + 1 << "'s turn!\n";
-      std::cout << "Action taken: " << players[currentPlayer].action << "\n";
-      std::cout << !(stopMask & (1 << currentPlayer)) << "\n";
-
       // user input here determines action taken
       if (players[currentPlayer].action != Action::NONE)
       {
@@ -97,19 +96,23 @@ int Blackjack::play(int numPlayers)
         {
           // draw a card
           uint32_t card = deck.draw();
+          /*
           std::cout << " drew ";
           printCard(card);
+          */
+          setCardString(cardString, 25, card);
+          Log::add("Player %u drew %s\n", currentPlayer + 1, cardString);
 
           players[currentPlayer].setCardBit(card);
 
           uint32_t score = players[currentPlayer].getScore();
 
-          std::cout << "Score is " << score << std::endl;
+          Log::add("Updated score is %u\n", score);
 
           // check if bust
           if (score > 21)
           {
-            std::cout << "Player " << currentPlayer + 1 << " has gone bust!" << std::endl;
+            Log::add("Player %u has gone bust!\n", currentPlayer + 1);
             players[currentPlayer].state = PlayerState::BUST;
             stopMask |= 1 << currentPlayer;
           }
@@ -154,6 +157,10 @@ int Blackjack::play(int numPlayers)
     glfwPollEvents();
   }
 
+  Log::writeLog();
+
+  terminate();
+
   return 0;
 }
 
@@ -169,4 +176,10 @@ void Blackjack::terminate()
 void Blackjack::printCard(uint32_t cardId) const
 {
   std::cout << CARDS[cardId % CARDS_PER_SUITE] << " of " << SUITES[cardId / CARDS_PER_SUITE] << std::endl;
+}
+
+const char* Blackjack::setCardString(char* string, size_t count, uint32_t cardId) const
+{
+  sprintf_s(string, count, "%s of %s", CARDS[cardId % CARDS_PER_SUITE], SUITES[cardId / CARDS_PER_SUITE]);
+  return string;
 }

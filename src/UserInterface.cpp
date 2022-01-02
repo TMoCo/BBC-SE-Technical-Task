@@ -8,16 +8,14 @@
 
 #include <Blackjack.h>
 #include <UserInterface.h>
+#include <Log.h>
 #include <Window.h>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
 
-UserInterface::UserInterface()
-{
-
-}
+UserInterface::UserInterface() { }
 
 UserInterface& UserInterface::get()
 {
@@ -31,9 +29,31 @@ void UserInterface::set(Blackjack* blackjack)
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 
-  ImGui::SetNextWindowSize({ (float)blackjack->window.width, (float)blackjack->window.height });
+  float width = (float)blackjack->window.width;
+  float height = (float)blackjack->window.height;
+  ImVec2 windowSize = { width, height };
+  ImGui::SetNextWindowSize(windowSize);
   ImGui::SetNextWindowPos({ 0.0f, 0.0f });
   ImGui::Begin("Main", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+
+  static Player& playerOne = blackjack->players[blackjack->players.size() - 1];
+  
+  if (ImGui::Button("Hit", { width * 0.485f, height * 0.2f }))
+  {
+    playerOne.action = Action::HIT;
+  }
+  ImGui::SameLine(0.0f);
+  if (ImGui::Button("Stand", { width * 0.485f, height * 0.2f }))
+  {
+    playerOne.action = Action::STAND;
+  }
+  ImGui::Separator();
+
+  ImGui::BeginChild("Log", { width * 0.485f, height * 0.7f });
+  Log::draw();
+  ImGui::EndChild();
+
+  // ImGui::ShowDemoWindow();
 
   ImGui::End();
 }

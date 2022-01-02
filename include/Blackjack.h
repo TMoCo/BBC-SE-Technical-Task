@@ -12,6 +12,7 @@
 
 #include <Player.h>
 #include <Deck.h>
+#include <Log.h>
 #include <glad/glad.h> // must be before glfw
 #include <Window.h>
 
@@ -30,6 +31,8 @@ private:
   void terminate();
 
   void printCard(uint32_t cardId) const;
+
+  const char* setCardString(char* string, size_t count, uint32_t carId) const;
 
 protected:
   Window window;
