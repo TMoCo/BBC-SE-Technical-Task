@@ -8,7 +8,9 @@ The game functions by letting players perform different actions, like hitting or
 ## Design Decisions
 I have chosen C++ as this is the language I am the most comfortable in and allows me to add graphics to the application.
 
-Cards are uniquely identified by an unsigned integer. Using the modulus operator and integer division, it's suite and rank can easily be retrieved. For instance with the set of suites { hearts, diamonds, clubs, spades }, the card with id 32 is a 6 of clubs (32 % 13 = 6 and 32 / 13 = 2 where the third suite is clubs). This allows for flexibility in the number of decks the game can use (Blackjack is commonly played with 1 to 8 decks). A deck of cards is modeled by an array of card indices and is shuffled by repeatedly swapping two cards at random positions in the deck. A player's hand consists of an array of 16 bit unsigned integers, one for each suite used in the deck. Bits 1 to 12 represent the ranks 2 to King with bit 0 reprsenting the Ace. Counting cards is achieved by looping over the hand and counting bits set to 1. Counting cards of a certain rank can be achieved by looping over each hand and adding the bitwise and operation of the rank's bit with the suite:
+Cards are uniquely identified by an unsigned integer. Using the modulus operator and integer division, it's suite and rank can easily be retrieved. For instance with the set of suites { hearts, diamonds, clubs, spades }, the card with id 32 is a 6 of clubs (32 % 13 = 6 and 32 / 13 = 2 where the third suite is clubs). This allows for flexibility in the number of decks the game can use (Blackjack is commonly played with 1 to 8 decks). 
+
+A deck of cards is modeled by an array of card indices and is shuffled by repeatedly swapping two cards at random positions in the deck. A player's hand consists of an array of 16 bit unsigned integers, one for each suite used in the deck. Bits 1 to 12 represent the ranks 2 to King with bit 0 reprsenting the Ace. Counting cards is achieved by looping over the hand and counting bits set to 1. Counting cards of a certain rank can be achieved by looping over each hand and adding the bitwise and operation of the rank's bit with the suite:
 
 ```cplusplus
  uint32_t Player::countCardRankBits(uint32_t cardRank)
@@ -21,7 +23,7 @@ Cards are uniquely identified by an unsigned integer. Using the modulus operator
   return count >> cardRank;
 }
  ```
-This avoids unnescesary branching when looking for a specific card rank, namely for aces:
+At the cost of having to loop over the number of suites in the deck, we avoid branching when looking for a specific card rank as well as dynamic memory allocation when adding cards to the hand. The use case for aces is:
 ```cplusplus
   uint32_t aces = countCardRankBits(0) * 11;
   while (score + aces > 21 && aces > 4) // stop if we have a valid score or aces already have value 1 (busted!)
