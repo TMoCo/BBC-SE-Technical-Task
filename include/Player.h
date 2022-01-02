@@ -18,10 +18,9 @@ constexpr int MIN_NUM_PLAYERS = 5;
 
 enum PlayerState : uint32_t
 {
-  STANDING,
-  BUST,
-  PLAYING,
-  CHOOSING
+  PLAYING = 0,
+  STANDING = 1,
+  BUST = 2
 };
 
 enum Action : uint32_t
@@ -30,6 +29,8 @@ enum Action : uint32_t
   HIT,
   STAND
 };
+
+class Blackjack;
 
 class Player
 {
@@ -40,10 +41,12 @@ public:
 
   uint32_t getScore();
 
+  Action determineAction(Blackjack* game);
+
 public:
   PlayerState state;
 
-  uint32_t hand[4];
+  uint16_t hand[4];
 
   Action action;
   

@@ -34,18 +34,34 @@ void UserInterface::set(Blackjack* blackjack)
   ImVec2 windowSize = { width, height };
   ImGui::SetNextWindowSize(windowSize);
   ImGui::SetNextWindowPos({ 0.0f, 0.0f });
-  ImGui::Begin("Main", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+  ImGui::Begin("Main", NULL, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+
+  if (ImGui::BeginMenuBar())
+  {
+    if (ImGui::BeginMenu("Game"))
+    {
+      if (ImGui::MenuItem("Start New"))
+      {
+        // reset black jack
+        blackjack->newGame = true;
+      }
+      ImGui::EndMenu();
+    }
+    ImGui::EndMenuBar();
+  }
 
   static Player& playerOne = blackjack->players[blackjack->players.size() - 1];
   
   if (ImGui::Button("Hit", { width * 0.485f, height * 0.2f }))
   {
     playerOne.action = Action::HIT;
+    Log::add("You chose to HIT.\n");
   }
   ImGui::SameLine(0.0f);
   if (ImGui::Button("Stand", { width * 0.485f, height * 0.2f }))
   {
     playerOne.action = Action::STAND;
+    Log::add("You chose to STAND.\n");
   }
   ImGui::Separator();
 

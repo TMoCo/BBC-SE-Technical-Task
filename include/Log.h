@@ -43,7 +43,7 @@ public:
     va_list args;
     __crt_va_start(args, format);
     log->buffer.appendfv(format, args);
-    _vfprintf_p(stdout, format, args);
+    // _vfprintf_p(stdout, format, args);
     __crt_va_end(args);
 
     int newSize = log->buffer.size();

@@ -28,6 +28,8 @@ public:
 private:
   int init();
 
+  void reset(uint32_t& stopMask, uint32_t& turnCount);
+
   void terminate();
 
   void printCard(uint32_t cardId) const;
@@ -40,6 +42,9 @@ protected:
   Deck deck;
 
   std::vector<Player> players;
+
+  bool newGame;
+
 };
 
 #endif // !BLACKJACK_H 

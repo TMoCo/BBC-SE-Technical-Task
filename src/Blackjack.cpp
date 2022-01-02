@@ -12,7 +12,7 @@
 #include <thomath.h> // personal maths library
 
 Blackjack::Blackjack()
-  : deck{ true }
+  : newGame{ false }
 { }
 
 int Blackjack::init()
@@ -40,6 +40,41 @@ int Blackjack::init()
   return 0;
 }
 
+void Blackjack::reset(uint32_t& stopMask, uint32_t& turnCount)
+{
+  deck = Deck{ true };
+
+  Log::get()->clear();
+
+  Log::add("-------------------------------\nNew game started! \
+All players draw a card.\n-------------------------------\n");
+
+  // all players start by drawing 1 card
+  char cardString[25] = {};
+  for (int i = 0; i < players.size(); ++i)
+  {
+    memset(players[i].hand, 0, 4 * sizeof(uint16_t)); // reset hand
+    
+    // draw two cards
+    uint32_t card = deck.draw();
+    setCardString(cardString, 25, card);
+    Log::add("Player %u drew %s\n", i + 1, cardString);
+    players[i].setCardBit(card);
+    card = deck.draw();
+    setCardString(cardString, 25, card);
+    Log::add("Player %u drew %s\n", i + 1, cardString);
+    players[i].setCardBit(card);
+
+    Log::add("Updated score is %u\n", players[i].getScore());
+    players[i].state = PlayerState::PLAYING;
+  }
+
+  stopMask = 0;
+  turnCount = 1;
+
+  newGame = false;
+}
+
 int Blackjack::play(int numPlayers)
 {
   if (numPlayers > MAX_NUM_PLAYERS || numPlayers < MIN_NUM_PLAYERS)
@@ -57,20 +92,10 @@ int Blackjack::play(int numPlayers)
   players.resize((size_t)numPlayers - 1);
   players.push_back({ false });
 
-  // all players start by drawing 1 card
-  char cardString[25] = {};
-  for (int i = 0; i < players.size(); ++i)
-  {
-    uint32_t card = deck.draw();
-    setCardString(cardString, 25, card);
-    Log::add("Player %u drew %s\n", i + 1, cardString);
-    players[i].setCardBit(card);
-    Log::add("Updated score is %u\n", players[i].getScore());
-  }
+  uint32_t stopMask, turnCount;
+  reset(stopMask, turnCount);
 
-  size_t currentPlayer = players.size() - 1;
-
-  uint32_t stopMask = 0;
+  size_t currentPlayer = 0;
   uint32_t allStopMask = (1 << (numPlayers)) - 1;
   
   glClearColor(0.0f, 0.69921f, 0.23437f, 1.0f);
@@ -81,75 +106,84 @@ int Blackjack::play(int numPlayers)
 
     UserInterface::get().set(this);
 
-    // process turn only if they can play
-    if (!(stopMask & (1 << currentPlayer)))
+    // at least one player is still playing
+    if (allStopMask != stopMask)
     {
-      if (players[currentPlayer].isAi)
+      if (currentPlayer == 0)
       {
-        players[currentPlayer].action = Action::HIT; // ai always draws for now
+        Log::add("-------------------------------\nTurn %u\n-------------------------------\n", turnCount++);
       }
 
-      // user input here determines action taken
-      if (players[currentPlayer].action != Action::NONE)
+      // process player's turn only if they can play
+      if (!(stopMask & (1 << currentPlayer)))
       {
-        if (players[currentPlayer].action == Action::HIT)
+        if (players[currentPlayer].isAi)
         {
-          // draw a card
-          uint32_t card = deck.draw();
-          /*
-          std::cout << " drew ";
-          printCard(card);
-          */
-          setCardString(cardString, 25, card);
-          Log::add("Player %u drew %s\n", currentPlayer + 1, cardString);
+          players[currentPlayer].determineAction(this); // ai always draws for now
+        }
 
-          players[currentPlayer].setCardBit(card);
-
-          uint32_t score = players[currentPlayer].getScore();
-
-          Log::add("Updated score is %u\n", score);
-
-          // check if bust
-          if (score > 21)
+        // user input here determines action taken
+        if (players[currentPlayer].action != Action::NONE)
+        {
+          if (players[currentPlayer].action == Action::HIT)
           {
-            Log::add("Player %u has gone bust!\n", currentPlayer + 1);
-            players[currentPlayer].state = PlayerState::BUST;
+            // draw a card
+            uint32_t card = deck.draw();
+            char cardString[25] = {};
+            setCardString(cardString, 25, card);
+            Log::add("Player %u drew %s\n", currentPlayer + 1, cardString);
+
+            players[currentPlayer].setCardBit(card);
+
+            uint32_t score = players[currentPlayer].getScore();
+
+            Log::add("Updated score is %u\n", score);
+
+            // check if bust
+            if (score > 21)
+            {
+              Log::add("/!\\ Player %u has gone bust!\n", currentPlayer + 1);
+              players[currentPlayer].state = PlayerState::BUST;
+              stopMask |= 1 << currentPlayer;
+            }
+          }
+          else if (players[currentPlayer].action == Action::STAND)
+          {
+            // don't draw any more cards
+            players[currentPlayer].state = PlayerState::STANDING;
             stopMask |= 1 << currentPlayer;
           }
-        }
-        else if (players[currentPlayer].action == Action::STAND)
-        {
-          // don't draw any more cards
-          players[currentPlayer].state = PlayerState::STANDING;
-          stopMask |= 1 << currentPlayer;
-        }
 
-        // reset player action and advance to next player
+          // reset player action and advance to next player
+          players[currentPlayer].action = Action::NONE;
+          currentPlayer = ++currentPlayer == players.size() ? 0 : currentPlayer;
+        }
+      }
+      else
+      {
         players[currentPlayer].action = Action::NONE;
         currentPlayer = ++currentPlayer == players.size() ? 0 : currentPlayer;
       }
-    }
-    else
-    {
-      players[currentPlayer].action = Action::NONE;
-      currentPlayer = ++currentPlayer == players.size() ? 0 : currentPlayer;
+
+
+      // if we stop playing now, determine the winner 
+      if (stopMask == allStopMask)
+      {
+        Log::add("Finding winner...\n");
+      }
+      // lose condition
+      else if (players[numPlayers - 1].state == PlayerState::BUST)
+      {
+        // stop game
+        Log::add("You're bust! Too bad.\nPlay again?\n");
+        stopMask = allStopMask;
+      }
     }
 
-    // all players are either standing or bust
-    if (allStopMask == stopMask)
+    if (newGame)
     {
-      // reveal dealer's card and decide the winner
-      break;
+      reset(stopMask, turnCount);
     }
-
-    /*
-    if (players[numPlayers - 1].state == PlayerState::BUST)
-    {
-      // stop game
-      std::cout << "You're bust! Too bad." << std::endl;
-      break;
-    }
-    */
 
     UserInterface::get().draw();
 
