@@ -6,17 +6,21 @@
 * Card class definition
 */
 
-#include <Card.h>
+#include <CardRenderer.h>
 #include <glad/glad.h>
 
-Card::Card()
-  : VBO{ 0 }, VAO{ 0 }, EBO{ 0 }
-{
+CardRenderer::CardRenderer()
+  : VBO{ 0 }, VAO{ 0 }, EBO{ 0 }, cardShader{ "..\\src\\card.vert", "..\\src\\card.frag" }, 
+  cardBack{ "..\\cardback.jpg" }, cardAtlas{ "..\\cardfront.jpg" }
+{ 
+  cardShader.use(); // only shader used in application, keep always on
+
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
   glGenBuffers(1, &EBO);
 
   glBindVertexArray(VAO);
+  // generate vertex buffers for drawing quads
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
 
@@ -29,11 +33,9 @@ Card::Card()
 
   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
-
-  glBindVertexArray(0);
 }
 
-Card::~Card()
+CardRenderer::~CardRenderer()
 {
   /*
   glDeleteBuffers(1, &VBO);
@@ -42,9 +44,14 @@ Card::~Card()
   glDeleteVertexArrays(1, &VAO);
 }
 
-void Card::draw()
+void CardRenderer::drawCardBack()
 {
-  glBindVertexArray(VAO);
+  // set card back texture and card position on board
+  cardBack.bind(0);
   glDrawElements(GL_TRIANGLES, sizeof(quadIndices) / sizeof(uint32_t), GL_UNSIGNED_INT, 0);
-  glBindVertexArray(0);
+}
+
+void CardRenderer::drawCard(uint32_t cardRank, uint32_t cardSuite)
+{
+
 }

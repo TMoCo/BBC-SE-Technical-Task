@@ -13,6 +13,7 @@
 #include <glad/glad.h>
 
 #include <Player.h>
+#include <CardRenderer.h>
 #include <Deck.h>
 #include <Log.h>
 #include <Framebuffer.h> 
@@ -30,7 +31,7 @@ public:
 private:
   int init();
 
-  void reset(uint32_t& stopMask, uint32_t& turnCount);
+  void reset(uint32_t& stopMask, uint32_t& turnCount, CardRenderer& renderer);
 
   void terminate();
 

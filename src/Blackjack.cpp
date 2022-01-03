@@ -8,7 +8,6 @@
 
 #include <Blackjack.h>
 #include <Texture.h>
-#include <Card.h>
 #include <UserInterface.h>
 #include <iostream>
 #include <Shader.h>
@@ -31,6 +30,7 @@ int Blackjack::init()
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
   window = { DEFAULT_WIDTH, DEFAULT_HEIGHT, "Blackjack" };
+  glfwSetWindowUserPointer(window.pWinGLFW, &window);
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
   {
@@ -45,13 +45,13 @@ int Blackjack::init()
   return 0;
 }
 
-void Blackjack::reset(uint32_t& stopMask, uint32_t& turnCount)
+void Blackjack::reset(uint32_t& stopMask, uint32_t& turnCount, CardRenderer& renderer)
 {
   deck = Deck{ true };
 
   // only refresh board on reset
   boardFramebuffer.bind();
-  glClearColor(0.0f, 0.69921f, 0.23437f, 1.0f);
+  glClearColor(0.0f, 0.29921f, 0.13437f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
 
   Log::get()->clear();
@@ -59,22 +59,57 @@ void Blackjack::reset(uint32_t& stopMask, uint32_t& turnCount)
   Log::add("-------------------------------\nNew game started!\n\
 All players draw two cards.\n-------------------------------\n");
 
-  // all players start by drawing 1 card
+
+  // draw player 1's hand
+
+
+
+  Vector2 stride = Vector2{ 0.9f, 0.0f } / (float)(players.size() - 1);
+  // now draw remaining players
   for (int i = 0; i < players.size(); ++i)
   {
-    memset(players[i].hand, 0, 4 * sizeof(uint16_t)); // reset hand
-    
+    Player& player = players[i];
+
+    float cardScale;
+    Vector2 cardPosition, stride;
+
+    if (i == 0)
+    {
+      cardScale = 0.3f;
+      cardPosition = { -0.8f, -0.65f };
+      stride = { 1.2f * cardScale, 0.0f };
+    }
+    else
+    {
+      cardScale = 0.8f / (players.size() - 1);
+      cardPosition = { -0.8f + (i - 1) * 2.5f * cardScale, 0.75f };
+      stride = { 0.2f * cardScale, -0.1f };
+    }
+
+    renderer.cardShader.setFloat("cardScale", cardScale);
+    renderer.cardShader.setVec2("cardPosition", cardPosition);
+    memset(player.hand, 0, sizeof(player.hand)); // reset hand
+
     // draw two cards
     uint32_t card = deck.draw();
     Log::add("Player %u drew %s of %s\n", i + 1, CARD_STRINGS[card % CARD_RANKS], SUITE_STRINGS[card / CARD_RANKS]);
-    players[i].setCardBit(card);
+    player.setCardBit(card);
+    renderer.drawCardBack();
+
+    cardPosition += stride;
+    renderer.cardShader.setVec2("cardPosition", cardPosition);
+    renderer.drawCardBack();
+
+    cardPosition += stride;
+    renderer.cardShader.setVec2("cardPosition", cardPosition);
 
     card = deck.draw();
     Log::add("Player %u drew %s of %s\n", i + 1, CARD_STRINGS[card % CARD_RANKS], SUITE_STRINGS[card / CARD_RANKS]);
-    players[i].setCardBit(card);
+    player.setCardBit(card);
+    renderer.drawCardBack();
 
-    Log::add("Updated score is %u\n", players[i].getScore());
-    players[i].state = PlayerState::PLAYING;
+    Log::add("Updated score is %u\n", player.getScore());
+    player.state = PlayerState::PLAYING;
   }
 
   stopMask = 0;
@@ -97,36 +132,23 @@ int Blackjack::play(int numPlayers)
     return -1;
   }
 
+  // init renderer
+  CardRenderer renderer;
+
+  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+  // init players
   players.resize((size_t)numPlayers);
   players.front().isAi = false;
 
+  // reset game management
   uint32_t stopMask, turnCount;
-  reset(stopMask, turnCount);
-
-  // turn management
+  reset(stopMask, turnCount, renderer);
   uint32_t currentPlayer = 0, allStopMask = (1 << (numPlayers)) - 1;
   bool newTurn = true;
 
-  // card shader
-  Shader cardShader{ "..\\src\\card.vert", "..\\src\\card.frag" };
-
-  Texture cardBack{ "..\\cardback.jpg" };
-  
-  Card newCard;
-
-  glViewport(0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT);
-  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-  cardShader.use();
-  // cardBack.bind(0);
-  cardShader.setVec3("colour", { 1,0,1 });
-  // cardShader.setInt("cardTexture", 0);
-    
-  newCard.draw();
-
   while (!glfwWindowShouldClose(window.pWinGLFW))
   {
-
     UserInterface::get().set(this);
 
     // at least one player is still playing
@@ -218,7 +240,7 @@ int Blackjack::play(int numPlayers)
 
     if (newGame)
     {
-      reset(stopMask, turnCount);
+      reset(stopMask, turnCount, renderer);
       currentPlayer = 0;
       newTurn = true;
     }

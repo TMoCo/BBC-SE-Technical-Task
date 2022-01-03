@@ -32,7 +32,7 @@ void UserInterface::set(Blackjack* blackjack)
   Vector2 windowSize = blackjack->window.getWindowSize();
   ImGui::SetNextWindowSize({ windowSize[0], windowSize[1] });
   ImGui::SetNextWindowPos({ 0.0f, 0.0f });
-  ImGui::Begin("Main", NULL, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+  ImGui::Begin("Main", NULL, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize);
 
   if (ImGui::BeginMenuBar())
   {

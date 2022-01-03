@@ -14,8 +14,6 @@
 
 class Texture
 {
-  friend class TextureLoader;
-  friend class UserInterface;
 public:
   Texture();
 
@@ -25,9 +23,7 @@ public:
 
   void bind(int unit = -1);
 
-//protected:
-  GLenum format;
-
+protected:
   uint32_t texId;
 };
 

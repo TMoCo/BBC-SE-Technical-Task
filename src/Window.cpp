@@ -37,8 +37,9 @@ void Window::onResize(GLFWwindow* pWindow, int width, int height)
   if (window)
   {
     // resize window data
-    window->width = width;
-    window->height = height;
+    glViewport(0, 0, width, height);
+    window->width = (uint32_t)width;
+    window->height = (uint32_t)height;
   }
 }
 

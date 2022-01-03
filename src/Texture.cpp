@@ -11,11 +11,11 @@
 #include <stb_image_write.h>
 
 Texture::Texture()
-  : texId{ 0 }, format{ GL_NONE }
+  : texId{ 0 }
 { }
 
 Texture::Texture(const char* path)
-  : texId{ 0 }, format{ format }
+  : texId{ 0 }
 { 
   glGenTextures(1, &texId);
   glBindTexture(GL_TEXTURE_2D, texId);

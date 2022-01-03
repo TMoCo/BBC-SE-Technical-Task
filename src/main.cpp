@@ -23,6 +23,6 @@ int main(int argc, char** argv)
 #else
   Blackjack blackjack;
 
-  return blackjack.play(5);
+  return blackjack.play(6);
 #endif // NDEBUG
 }
