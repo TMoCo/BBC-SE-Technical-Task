@@ -9,7 +9,7 @@
 #ifndef WINDOW_H
 #define WINDOW_H 1
 
-
+#include <thomath.h>
 #include <cstdint>
 #include <GLFW/glfw3.h>
 
@@ -29,6 +29,8 @@ public:
   static void onResize(GLFWwindow* window, int width, int height);
 
   void swap();
+
+  Vector2 getWindowSize();
 
 protected:
   GLFWwindow* pWinGLFW;

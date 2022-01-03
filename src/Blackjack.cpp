@@ -7,9 +7,12 @@
 */
 
 #include <Blackjack.h>
+#include <Texture.h>
+#include <Card.h>
 #include <UserInterface.h>
 #include <iostream>
-#include <thomath.h> // personal maths library
+#include <Shader.h>
+#include <thomath.h>
 
 Blackjack::Blackjack()
   : newGame{ false }
@@ -35,6 +38,8 @@ int Blackjack::init()
     return -1;
   }
 
+  boardFramebuffer.build( DEFAULT_WIDTH, DEFAULT_HEIGHT );
+
   UserInterface::get().init(&window);
 
   return 0;
@@ -44,10 +49,15 @@ void Blackjack::reset(uint32_t& stopMask, uint32_t& turnCount)
 {
   deck = Deck{ true };
 
+  // only refresh board on reset
+  boardFramebuffer.bind();
+  glClearColor(0.0f, 0.69921f, 0.23437f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT);
+
   Log::get()->clear();
 
-  Log::add("-------------------------------\nNew game started! \
-All players draw a card.\n-------------------------------\n");
+  Log::add("-------------------------------\nNew game started!\n\
+All players draw two cards.\n-------------------------------\n");
 
   // all players start by drawing 1 card
   for (int i = 0; i < players.size(); ++i)
@@ -97,11 +107,25 @@ int Blackjack::play(int numPlayers)
   uint32_t currentPlayer = 0, allStopMask = (1 << (numPlayers)) - 1;
   bool newTurn = true;
 
+  // card shader
+  Shader cardShader{ "..\\src\\card.vert", "..\\src\\card.frag" };
 
-  glClearColor(0.0f, 0.69921f, 0.23437f, 1.0f);
+  Texture cardBack{ "..\\cardback.jpg" };
+  
+  Card newCard;
+
+  glViewport(0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT);
+  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+  cardShader.use();
+  // cardBack.bind(0);
+  cardShader.setVec3("colour", { 1,0,1 });
+  // cardShader.setInt("cardTexture", 0);
+    
+  newCard.draw();
+
   while (!glfwWindowShouldClose(window.pWinGLFW))
   {
-    glClear(GL_COLOR_BUFFER_BIT);
 
     UserInterface::get().set(this);
 
@@ -112,6 +136,7 @@ int Blackjack::play(int numPlayers)
       {
         Log::add("-------------------------------\nTurn %u\n-------------------------------\n", turnCount++);
         newTurn = false;
+        Log::add("Player %u, choose an action.\n", currentPlayer + 1);
       }
 
       // process player's turn only if they can play
@@ -128,6 +153,7 @@ int Blackjack::play(int numPlayers)
           if (players[currentPlayer].action == Action::HIT)
           {
             Log::add("Player %u decided to HIT.\n", currentPlayer + 1);
+            
             // draw a card
             uint32_t card = deck.draw();
             Log::add("Player %u drew %s of %s\n", 
@@ -136,7 +162,6 @@ int Blackjack::play(int numPlayers)
             players[currentPlayer].setCardBit(card);
 
             uint32_t score = players[currentPlayer].getScore();
-
             Log::add("Updated score is %u\n", score);
 
             // check if bust
@@ -197,6 +222,11 @@ int Blackjack::play(int numPlayers)
       currentPlayer = 0;
       newTurn = true;
     }
+
+    // bind default framebuffer for drawing gui
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
 
     UserInterface::get().draw();
 
@@ -275,7 +305,7 @@ void Blackjack::getWinners()
   {
     if (winnersMask & (1 << i))
     {
-      Log::add("Congratulations player %u, you win!\n", i + 1);
+      Log::add("Congratulations player %u!\n", i + 1);
     }
   }
 }

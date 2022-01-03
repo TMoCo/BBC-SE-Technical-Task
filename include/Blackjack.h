@@ -10,10 +10,12 @@
 #ifndef BLACKJACK_H
 #define BLACKJACK_H 1
 
+#include <glad/glad.h>
+
 #include <Player.h>
 #include <Deck.h>
 #include <Log.h>
-#include <glad/glad.h> // must be before glfw
+#include <Framebuffer.h> 
 #include <Window.h>
 
 class Blackjack
@@ -36,6 +38,8 @@ private:
 
 protected:
   Window window;
+
+  Framebuffer boardFramebuffer;
 
   Deck deck;
 

@@ -3,7 +3,8 @@
 * Date Created: 02/01/2022
 * Copyright 2022 under MIT License
 *
-* Log class
+* Log class adapted from the imgui demo:
+* https://github.com/ocornut/imgui/blob/master/imgui_demo.cpp
 */
 
 #ifndef LOG_H

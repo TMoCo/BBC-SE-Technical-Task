@@ -6,13 +6,11 @@
 * Class representing a standard deck of cards
 */
 
-
 #ifndef DECK_H
 #define DECK_H 1
 
 #include <cstdint>
 #include <array>
-
 
 constexpr uint32_t NUM_DECKS = 1;
 constexpr uint32_t CARD_RANKS = 13;

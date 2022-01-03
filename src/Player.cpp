@@ -93,3 +93,8 @@ Action Player::determineAction(Blackjack* game)
   }
   return action;
 }
+
+void Player::drawHand()
+{
+
+}

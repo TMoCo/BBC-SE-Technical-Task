@@ -49,6 +49,8 @@ public:
 
   uint32_t countCards();
 
+  void drawHand();
+
 public:
   PlayerState state;
 

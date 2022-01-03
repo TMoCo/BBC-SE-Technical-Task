@@ -28,11 +28,9 @@ void UserInterface::set(Blackjack* blackjack)
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
-
-  float width = (float)blackjack->window.width;
-  float height = (float)blackjack->window.height;
-  ImVec2 windowSize = { width, height };
-  ImGui::SetNextWindowSize(windowSize);
+    
+  Vector2 windowSize = blackjack->window.getWindowSize();
+  ImGui::SetNextWindowSize({ windowSize[0], windowSize[1] });
   ImGui::SetNextWindowPos({ 0.0f, 0.0f });
   ImGui::Begin("Main", NULL, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
 
@@ -51,19 +49,20 @@ void UserInterface::set(Blackjack* blackjack)
   }
 
   static Player& playerOne = blackjack->players.front();
-  
-  if (ImGui::Button("Hit", { width * 0.485f, height * 0.2f }))
+  ImVec2 region = ImGui::GetContentRegionAvail();
+  if (ImGui::Button("Hit", { region.x * 0.5f, region.y * 0.2f }))
   {
     playerOne.action = Action::HIT;
   }
   ImGui::SameLine(0.0f);
-  if (ImGui::Button("Stand", { width * 0.485f, height * 0.2f }))
+  if (ImGui::Button("Stand", { region.x * 0.5f, region.y * 0.2f }))
   {
     playerOne.action = Action::STAND;
   }
   ImGui::Separator();
 
-  ImGui::BeginChild("Log", { width * 0.485f, height * 0.7f });
+  region = ImGui::GetContentRegionAvail();
+  ImGui::BeginChild("Log", { region.x * 0.3f, region.y });
   Log::draw();
   
   if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
@@ -72,10 +71,19 @@ void UserInterface::set(Blackjack* blackjack)
   }
 
   ImGui::EndChild();
+  
+  ImGui::SameLine();
+
+  ImGui::BeginChild("Board", { region.x * 0.7f, region.y});
+
+  ImGui::Image((void*)(intptr_t)blackjack->boardFramebuffer.colourBuffer, { region.x * 0.7f, region.y }, { 0.0f, 0.0f }, { 1.0f, -1.0f });
+
+  ImGui::EndChild();
 
   // ImGui::ShowDemoWindow();
 
   ImGui::End();
+
 }
 
 void UserInterface::draw()
