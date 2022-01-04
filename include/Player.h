@@ -49,14 +49,12 @@ public:
 
   uint32_t countCards();
 
-  void drawHand();
+  bool hasAces();
 
 public:
   PlayerState state;
 
-  uint16_t hand[CARDS_TOTAL / CARD_RANKS];
-
-  uint32_t score;
+  std::vector<uint32_t> hand;
 
   Action action;
   

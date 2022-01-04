@@ -13,7 +13,7 @@
 #include <glad/glad.h>
 
 #include <Player.h>
-#include <CardRenderer.h>
+#include <BoardRenderer.h>
 #include <Deck.h>
 #include <Log.h>
 #include <Framebuffer.h> 
@@ -22,6 +22,7 @@
 class Blackjack
 {
   friend class UserInterface;
+  friend class BoardRenderer;
 
 public:
   Blackjack();
@@ -31,7 +32,7 @@ public:
 private:
   int init();
 
-  void reset(uint32_t& stopMask, uint32_t& turnCount, CardRenderer& renderer);
+  void reset(uint32_t& stopMask, uint32_t& turnCount);
 
   void terminate();
 
@@ -40,13 +41,13 @@ private:
 protected:
   Window window;
 
-  Framebuffer boardFramebuffer;
-
   Deck deck;
 
   std::vector<Player> players;
 
-  bool newGame;
+  Player dealer;
+
+  bool newGame, showHands;
 
 };
 

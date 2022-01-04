@@ -1,0 +1,8 @@
+-------------------------------
+New game started!
+All players draw two cards.
+-------------------------------
+Turn 1
+-------------------------------
+Player 1, choose an action.
+Your current score is 13.

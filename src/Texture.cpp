@@ -4,6 +4,7 @@
 * COPYRIGHT UNDER THE MIT LICENSE
 */
 
+#include <error.h>
 #include <Texture.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -25,6 +26,7 @@ Texture::Texture(const char* path)
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   
   int width, height, nrChannels;
+  stbi_set_flip_vertically_on_load(true);
   unsigned char* data = stbi_load(path, &width, &height, &nrChannels, 0);
   if (data)
   {
@@ -33,9 +35,9 @@ Texture::Texture(const char* path)
   }
   else
   {
-    std::cerr << "Error! Failed to load texture." << std::endl;
+    stbi_image_free(data);
+    ERROR_MSG("Error! Failed to load texture.", __FILE__, __LINE__);
   }
-
   stbi_image_free(data);
 }
 

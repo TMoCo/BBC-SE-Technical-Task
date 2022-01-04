@@ -6,6 +6,7 @@
 * Blackjack class definition
 */
 
+#include <error.h>
 #include <Blackjack.h>
 #include <Texture.h>
 #include <UserInterface.h>
@@ -14,14 +15,14 @@
 #include <thomath.h>
 
 Blackjack::Blackjack()
-  : newGame{ false }
+  : newGame{ false }, showHands{ false }
 { }
 
 int Blackjack::init()
 {
   if (!glfwInit())
   {
-    std::cerr << "Error! Could not initialise GLFW." << std::endl;
+    ERROR_MSG("Failed to initialise GLFW.", __FILE__, __LINE__);
     return -1;
   }
 
@@ -34,82 +35,39 @@ int Blackjack::init()
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
   {
-    std::cerr << "Error! Could not initialise Glad." << std::endl;
+    ERROR_MSG("Failed to initialise Glad.", __FILE__, __LINE__);
     return -1;
   }
-
-  boardFramebuffer.build( DEFAULT_WIDTH, DEFAULT_HEIGHT );
 
   UserInterface::get().init(&window);
 
   return 0;
 }
 
-void Blackjack::reset(uint32_t& stopMask, uint32_t& turnCount, CardRenderer& renderer)
+void Blackjack::reset(uint32_t& stopMask, uint32_t& turnCount)
 {
-  deck = Deck{ true };
-
-  // only refresh board on reset
-  boardFramebuffer.bind();
-  glClearColor(0.0f, 0.29921f, 0.13437f, 1.0f);
-  glClear(GL_COLOR_BUFFER_BIT);
+  deck = Deck{ true }; // refresh deck
 
   Log::get()->clear();
-
-  Log::add("-------------------------------\nNew game started!\n\
-All players draw two cards.\n-------------------------------\n");
-
-
-  // draw player 1's hand
-
-
+  Log::add("-------------------------------\nNew game started!\nAll players draw two cards.\n");
 
   Vector2 stride = Vector2{ 0.9f, 0.0f } / (float)(players.size() - 1);
   // now draw remaining players
   for (int i = 0; i < players.size(); ++i)
   {
     Player& player = players[i];
-
-    float cardScale;
-    Vector2 cardPosition, stride;
-
-    if (i == 0)
-    {
-      cardScale = 0.3f;
-      cardPosition = { -0.8f, -0.65f };
-      stride = { 1.2f * cardScale, 0.0f };
-    }
-    else
-    {
-      cardScale = 0.8f / (players.size() - 1);
-      cardPosition = { -0.8f + (i - 1) * 2.5f * cardScale, 0.75f };
-      stride = { 0.2f * cardScale, -0.1f };
-    }
-
-    renderer.cardShader.setFloat("cardScale", cardScale);
-    renderer.cardShader.setVec2("cardPosition", cardPosition);
-    memset(player.hand, 0, sizeof(player.hand)); // reset hand
+    player.hand.clear();
 
     // draw two cards
     uint32_t card = deck.draw();
-    Log::add("Player %u drew %s of %s\n", i + 1, CARD_STRINGS[card % CARD_RANKS], SUITE_STRINGS[card / CARD_RANKS]);
-    player.setCardBit(card);
-    renderer.drawCardBack();
-
-    cardPosition += stride;
-    renderer.cardShader.setVec2("cardPosition", cardPosition);
-    renderer.drawCardBack();
-
-    cardPosition += stride;
-    renderer.cardShader.setVec2("cardPosition", cardPosition);
-
+    players[i].hand.push_back(card);
+    //Log::add("Player %u drew %s of %s\n", i + 1, CARD_STRINGS[card % CARD_RANKS], SUITE_STRINGS[card / CARD_RANKS]);
     card = deck.draw();
-    Log::add("Player %u drew %s of %s\n", i + 1, CARD_STRINGS[card % CARD_RANKS], SUITE_STRINGS[card / CARD_RANKS]);
-    player.setCardBit(card);
-    renderer.drawCardBack();
-
-    Log::add("Updated score is %u\n", player.getScore());
-    player.state = PlayerState::PLAYING;
+    players[i].hand.push_back(card);
+    //Log::add("Player %u drew %s of %s\n", i + 1, CARD_STRINGS[card % CARD_RANKS], SUITE_STRINGS[card / CARD_RANKS]);
+    
+    //Log::add("Updated score is %u\n", players[i].getScore());
+    players[i].state = PlayerState::PLAYING;
   }
 
   stopMask = 0;
@@ -122,18 +80,18 @@ int Blackjack::play(int numPlayers)
 {
   if (numPlayers > MAX_NUM_PLAYERS || numPlayers < MIN_NUM_PLAYERS)
   {
-    std::cerr << "Error! Invalid number of players." << std::endl;
+    ERROR_MSG("Invalid number of players.", __FILE__, __LINE__);
     return -1;
   }
 
   if (init() != 0)
   {
-    std::cerr << "Error! Could not initialise the game." << std::endl;
+    ERROR_MSG("Failed to initialise the game.", __FILE__, __LINE__);
     return -1;
   }
 
   // init renderer
-  CardRenderer renderer;
+  BoardRenderer renderer;
 
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
@@ -143,13 +101,16 @@ int Blackjack::play(int numPlayers)
 
   // reset game management
   uint32_t stopMask, turnCount;
-  reset(stopMask, turnCount, renderer);
+  reset(stopMask, turnCount);
   uint32_t currentPlayer = 0, allStopMask = (1 << (numPlayers)) - 1;
   bool newTurn = true;
 
+  // initialise the board
+  renderer.drawBoard(this, showHands);
+
   while (!glfwWindowShouldClose(window.pWinGLFW))
   {
-    UserInterface::get().set(this);
+    UserInterface::get().set(this, &renderer);
 
     // at least one player is still playing
     if (allStopMask != stopMask)
@@ -157,53 +118,58 @@ int Blackjack::play(int numPlayers)
       if (newTurn)
       {
         Log::add("-------------------------------\nTurn %u\n-------------------------------\n", turnCount++);
+        renderer.drawBoard(this, showHands);
+
         newTurn = false;
-        Log::add("Player %u, choose an action.\n", currentPlayer + 1);
+        if (!(stopMask & 1)) // if player 1 is still playing, prompt them
+        {
+          Log::add("Player %u, choose an action.\n", 1);
+          Log::add("Your current score is %u.\n", players.front().getScore());
+        }
       }
+
+      Player& player = players[currentPlayer];
 
       // process player's turn only if they can play
       if (!(stopMask & (1 << currentPlayer)))
       {
-        if (players[currentPlayer].isAi)
+
+        if (player.isAi)
         {
-          players[currentPlayer].determineAction(this); // ai always draws for now
+          player.determineAction(this); // ai always draws for now
         }
 
         // user input here determines action taken
-        if (players[currentPlayer].action != Action::NONE)
+        if (player.action != Action::NONE)
         {
-          if (players[currentPlayer].action == Action::HIT)
+          if (player.action == Action::HIT)
           {
             Log::add("Player %u decided to HIT.\n", currentPlayer + 1);
             
             // draw a card
             uint32_t card = deck.draw();
-            Log::add("Player %u drew %s of %s\n", 
-              currentPlayer + 1, CARD_STRINGS[card % CARD_RANKS], SUITE_STRINGS[card / CARD_RANKS]);
+            player.hand.push_back(card);
 
-            players[currentPlayer].setCardBit(card);
-
-            uint32_t score = players[currentPlayer].getScore();
-            Log::add("Updated score is %u\n", score);
+            //Log::add("Updated score is %u\n", score);
 
             // check if bust
-            if (score > 21)
+            if (player.getScore() > 21)
             {
-              Log::add("/!\\ Player %u has gone bust!\n", currentPlayer + 1);
-              players[currentPlayer].state = PlayerState::BUST;
+              player.state = PlayerState::BUST;
               stopMask |= 1 << currentPlayer;
+              Log::add("/!\\ Player %u has gone bust!\n", currentPlayer + 1);
             }
           }
-          else if (players[currentPlayer].action == Action::STAND)
+          else if (player.action == Action::STAND)
           {
             Log::add("Player %u decided to STAND.\n", currentPlayer + 1);
             // don't draw any more cards
-            players[currentPlayer].state = PlayerState::STANDING;
+            player.state = PlayerState::STANDING;
             stopMask |= 1 << currentPlayer;
           }
 
           // reset player action and advance to next player
-          players[currentPlayer].action = Action::NONE;
+          player.action = Action::NONE;
 
           if (++currentPlayer == players.size())
           {
@@ -214,7 +180,7 @@ int Blackjack::play(int numPlayers)
       }
       else
       {
-        players[currentPlayer].action = Action::NONE;
+        player.action = Action::NONE;
 
         if (++currentPlayer == players.size())
         {
@@ -227,12 +193,13 @@ int Blackjack::play(int numPlayers)
       if (stopMask == allStopMask)
       {
         Log::add("Finding winner...\n");
+        renderer.drawBoard(this, true);
         getWinners();
       }
-      // lose condition
-      else if (players.front().state == PlayerState::BUST)
+      else if (players.front().state == PlayerState::BUST) // Player 1 lost, play again?
       {
         // stop game
+        renderer.drawBoard(this, true);
         Log::add("You're bust! Too bad.\nPlay again?\n");
         stopMask = allStopMask;
       }
@@ -240,7 +207,8 @@ int Blackjack::play(int numPlayers)
 
     if (newGame)
     {
-      reset(stopMask, turnCount, renderer);
+      reset(stopMask, turnCount);
+      renderer.drawBoard(this, showHands);
       currentPlayer = 0;
       newTurn = true;
     }
@@ -281,7 +249,7 @@ void Blackjack::getWinners()
   {
     if (players[i].state != PlayerState::BUST)
     {
-      uint32_t playerScore = players[i].score;
+      uint32_t playerScore = players[i].getScore();
       if (playerScore > highestScore)
       {
         highestScore = playerScore;
@@ -291,7 +259,7 @@ void Blackjack::getWinners()
 
       if (playerScore == 21)
       {
-        uint32_t cardCount = players[i].countCards();
+        size_t cardCount = players[i].hand.size();
         if (cardCount == 2 && !needBlackjack)
         {
           winnersMask = 0; // first blackjack detected, invalidated previous non blackjack 21 scores

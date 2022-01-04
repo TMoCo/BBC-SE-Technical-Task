@@ -10,6 +10,7 @@
 #ifndef LOG_H
 #define LOG_H 1
 
+#include <error.h>
 #include <imgui.h>
 #include <vector>
 #include <fstream>
@@ -91,7 +92,7 @@ public:
 
     if (!out.is_open())
     {
-      std::cerr << "Error! Could not open log file." << std::endl;
+      ERROR_MSG("Failed to open log file.", __FILE__, __LINE__)
       return;
     }
 

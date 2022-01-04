@@ -12,7 +12,7 @@
 #include <iostream>
 
 Player::Player(bool isAi)
-  : isAi{ isAi }, state{ PlayerState::PLAYING }, hand{}, action{ Action::NONE }, score{ 0 }
+  : isAi{ isAi }, state{ PlayerState::PLAYING }, hand{}, action{ Action::NONE }
 { }
 
 void Player::setCardBit(uint32_t cardId)
@@ -22,24 +22,19 @@ void Player::setCardBit(uint32_t cardId)
 
 uint32_t Player::getScore()
 {
-  score = 0;
-
-  // count times the bit is set for each suite
-  for (uint32_t i = 1; i < CARD_RANKS; ++i)
+  uint32_t aces = 0, score = 0;
+  for (auto& card : hand)
   {
-    score += countCardRankBits(i) * CARD_VALUES[i - 1];
+    score += CARD_VALUES[card % 13];
+    aces += (1 << (card % 13)) & 1;
   }
-  
-  // handle aces separately
-  uint32_t aces = countCardRankBits(0) * 11;
-  while (score + aces > 21 && aces > 4) // stop if aces can't be minimised or we have a valid score
+  aces *= 11;
+  while (score + aces > 21 && aces > 4) 
   {
     aces -= 10;
   }
 
-  score += aces;
-
-  return score;
+  return score + aces;
 }
 
 uint32_t Player::countCardRankBits(uint32_t cardRank)
@@ -69,7 +64,8 @@ uint32_t Player::countCards()
 Action Player::determineAction(Blackjack* game)
 {
   // determine if player has an ace
-  if (countCardRankBits(1))
+  uint32_t score = getScore();
+  if (hasAces())
   {
     if (score < 13)
     {
@@ -94,7 +90,12 @@ Action Player::determineAction(Blackjack* game)
   return action;
 }
 
-void Player::drawHand()
+bool Player::hasAces()
 {
-
+  bool hasAces = false;
+  for (auto& card : hand)
+  {
+    hasAces |= (1 << (card % 13)) & 1; // 0 = false, !0 = true
+  }
+  return hasAces;
 }

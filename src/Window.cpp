@@ -6,6 +6,7 @@
 * Minimal window class
 */
 
+#include <error.h>
 #include <Window.h>
 #include <iostream>
 
@@ -27,7 +28,7 @@ Window::Window(uint32_t width, uint32_t height, const char* name, bool makeCurre
   }
   else
   {
-    std::cerr << "Error initialising window!\n";
+    ERROR_MSG("Failed to initialise window!", __FILE__, __LINE__)
   }
 }
 

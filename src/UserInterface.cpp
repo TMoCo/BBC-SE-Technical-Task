@@ -7,6 +7,7 @@
 */
 
 #include <Blackjack.h>
+#include <BoardRenderer.h>
 #include <UserInterface.h>
 #include <Log.h>
 #include <Window.h>
@@ -23,7 +24,7 @@ UserInterface& UserInterface::get()
   return ui;
 }
 
-void UserInterface::set(Blackjack* blackjack)
+void UserInterface::set(Blackjack* blackjack, BoardRenderer* renderer)
 {
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
@@ -42,6 +43,20 @@ void UserInterface::set(Blackjack* blackjack)
       {
         // reset black jack
         blackjack->newGame = true;
+      }
+
+      if (blackjack->showHands)
+      {
+        if (ImGui::MenuItem("Hide all cards"))
+        {
+          blackjack->showHands = false;
+          renderer->drawBoard(blackjack, false);
+        }
+      }
+      else if (ImGui::MenuItem("View all cards"))
+      {
+        blackjack->showHands = true;
+        renderer->drawBoard(blackjack, true);
       }
       ImGui::EndMenu();
     }
@@ -76,7 +91,23 @@ void UserInterface::set(Blackjack* blackjack)
 
   ImGui::BeginChild("Board", { region.x * 0.7f, region.y});
 
-  ImGui::Image((void*)(intptr_t)blackjack->boardFramebuffer.colourBuffer, { region.x * 0.7f, region.y }, { 0.0f, 0.0f }, { 1.0f, -1.0f });
+  float width = ImGui::GetWindowWidth();
+  float numPlayers = (float)blackjack->players.size();
+  ImGui::InvisibleButton("padding", ImVec2(width / numPlayers * 0.5f, 0.5f));
+  ImGui::SameLine();
+  ImGui::PushItemWidth(width * 0.9f);
+  if (ImGui::BeginTable("player names", (int)blackjack->players.size()-1))
+  {
+    ImGui::TableNextRow();
+    for (int i = 1; i < blackjack->players.size(); ++i)
+    {
+      ImGui::TableSetColumnIndex(i - 1);
+      ImGui::Text("P%i", i + 1);
+    }
+    ImGui::EndTable();
+  }
+
+  ImGui::Image((void*)(intptr_t)renderer->boardFramebuffer.colourBuffer, { region.x * 0.7f, region.y * 0.95f }, { 0.0f, 0.0f }, { 1.0f, -1.0f });
 
   ImGui::EndChild();
 

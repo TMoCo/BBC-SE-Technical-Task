@@ -6,6 +6,7 @@
 * Deck class definition
 */
 
+#include <error.h>
 #include <Deck.h>
 #include <random>
 #include <iostream>
@@ -37,7 +38,7 @@ uint32_t Deck::draw()
 {
   if (topOfDeck == CARDS_TOTAL)
   {
-    std::cerr << "Error! No cards remaining to draw." << std::endl;
+    ERROR_MSG("Ran out of cards to draw.", __FILE__, __LINE__);
     return topOfDeck;
   }
 

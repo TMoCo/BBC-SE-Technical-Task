@@ -17,9 +17,9 @@ class Framebuffer
 public:
   Framebuffer();
 
-  ~Framebuffer();
+  Framebuffer(uint32_t width, uint32_t height);
 
-  void build(uint32_t width, uint32_t height);
+  ~Framebuffer();
 
   void bind();
 
@@ -27,9 +27,10 @@ protected:
   uint32_t colourBuffer; // give access to userinterface for drawing
 
 private:
-  void destroy();
-
   uint32_t FBO;
+
+  uint32_t width, height;
+
 };
 
 #endif // !FRAMEBUFFER_H

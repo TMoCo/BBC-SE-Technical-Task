@@ -10,6 +10,7 @@
 #define USER_INTERFACE_H 1
 
 class Blackjack;
+class BoardRenderer;
 class Window;
 
 class UserInterface
@@ -19,7 +20,7 @@ class UserInterface
 public:
   static UserInterface& get();
 
-  void set(Blackjack* blackjack);
+  void set(Blackjack* blackjack, BoardRenderer* renderer);
 
   void draw();
 

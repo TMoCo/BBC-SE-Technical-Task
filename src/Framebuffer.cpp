@@ -6,22 +6,18 @@
 * Framebuffer class definition
 */
 
+#include <error.h>
 #include <glad/glad.h>
 #include <Framebuffer.h>
 #include <iostream>
 
 Framebuffer::Framebuffer()
-  : FBO{ 0 }, colourBuffer{ 0 }
+  : FBO{ 0 }, colourBuffer{ 0 }, width{ 0 }, height{ 0 }
 { }
 
-Framebuffer::~Framebuffer()
+Framebuffer::Framebuffer(uint32_t width, uint32_t height)
+  : FBO{ 0 }, colourBuffer{ 0 }, width{ width }, height{ height }
 {
-  destroy();
-}
-
-void Framebuffer::build(uint32_t width, uint32_t height)
-{
-  destroy(); 
   glGenFramebuffers(1, &FBO);
   glBindFramebuffer(GL_FRAMEBUFFER, FBO);
   // colour buffer
@@ -36,13 +32,13 @@ void Framebuffer::build(uint32_t width, uint32_t height)
 
   if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
   {
-    std::cerr << "Error! Framebuffer is not complete." << std::endl;
+    ERROR_MSG("Failed to initialise framebuffer.", __FILE__, __LINE__);
   }
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Framebuffer::destroy()
+Framebuffer::~Framebuffer()
 {
   if (colourBuffer)
   {
@@ -57,5 +53,6 @@ void Framebuffer::destroy()
 
 void Framebuffer::bind()
 {
+  glViewport(0, 0, width, height);
   glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 }

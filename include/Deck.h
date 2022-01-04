@@ -42,7 +42,7 @@ constexpr char* SUITE_STRINGS[CARD_SUITS] =
   "Spades"
 };
 
-constexpr uint32_t CARD_VALUES[CARD_RANKS - 1] = { 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10 }; // omit ace, handled separately
+constexpr uint32_t CARD_VALUES[CARD_RANKS] = { 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10 }; // omit ace, handled separately
 
 class Deck
 {

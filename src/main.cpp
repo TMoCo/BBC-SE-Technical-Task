@@ -13,7 +13,7 @@ int main(int argc, char** argv)
 #ifdef NDEBUG
   if (argc < 2)
   {
-    std::cerr << "Error! Invalid number of arguments.\nUsage:\tC:\\Blackjack.exe nPlayers\nPlayers allowed: from 5 to 9." << std::endl;
+    fprintf(stderr, "Invalid number of arguments.\nUsage:\tC:\\Blackjack.exe nPlayers\nnPlayers allowed: from 5 to 9.\n");
     return -1;
   }
 
@@ -23,6 +23,6 @@ int main(int argc, char** argv)
 #else
   Blackjack blackjack;
 
-  return blackjack.play(6);
+  return blackjack.play(5);
 #endif // NDEBUG
 }
