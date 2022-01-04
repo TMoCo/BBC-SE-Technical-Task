@@ -23,18 +23,18 @@ void Player::setCardBit(uint32_t cardId)
 uint32_t Player::getScore()
 {
   uint32_t aces = 0, score = 0;
-  for (auto& card : hand)
+  for (uint32_t& card : hand)
   {
     score += CARD_VALUES[card % 13];
     aces += (1 << (card % 13)) & 1;
   }
-  aces *= 11;
-  while (score + aces > 21 && aces > 4) 
+  while (score > 21 && aces > 0) 
   {
-    aces -= 10;
+    score -= 10; // remove aces
+    aces--;
   }
 
-  return score + aces;
+  return score;
 }
 
 uint32_t Player::countCardRankBits(uint32_t cardRank)

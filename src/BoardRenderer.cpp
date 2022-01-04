@@ -11,9 +11,15 @@
 #include <BoardRenderer.h>
 #include <Window.h>
 
+#ifndef NDEBUG
+BoardRenderer::BoardRenderer()
+  : VBO{ 0 }, VAO{ 0 }, EBO{ 0 }, cardShader{ "..\\src\\card.vert", "..\\src\\card.frag" },
+  cardBack{ "..\\cardback.jpg" }, cardAtlas{ "..\\cardfront.jpg" }, boardFramebuffer{ DEFAULT_WIDTH, DEFAULT_HEIGHT }
+#else
 BoardRenderer::BoardRenderer()
   : VBO{ 0 }, VAO{ 0 }, EBO{ 0 }, cardShader{ "src\\card.vert", "src\\card.frag" },
   cardBack{ "cardback.jpg" }, cardAtlas{ "cardfront.jpg" }, boardFramebuffer{ DEFAULT_WIDTH, DEFAULT_HEIGHT }
+#endif // !NDEBUG
 { 
   cardShader.use(); // only shader used in application, keep always on
 
