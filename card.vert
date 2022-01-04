@@ -7,9 +7,8 @@ out vec2 texCoord;
 
 uniform vec2 cardPosition;
 uniform float cardScale;
-uniform float cardZ;
 
 void main() {
 	texCoord = inTexCoord;
-	gl_Position = vec4((inPosition.xy * cardScale) + cardPosition, cardZ, 1.0f);
+	gl_Position = vec4((inPosition.xy * cardScale) + cardPosition, 0.0f, 1.0f);
 }

@@ -13,11 +13,11 @@
 
 #ifndef NDEBUG
 BoardRenderer::BoardRenderer()
-  : VBO{ 0 }, VAO{ 0 }, EBO{ 0 }, cardShader{ "..\\src\\card.vert", "..\\src\\card.frag" },
+  : VBO{ 0 }, VAO{ 0 }, EBO{ 0 }, cardShader{ "..\\card.vert", "..\\card.frag" },
   cardBack{ "..\\cardback.jpg" }, cardAtlas{ "..\\cardfront.jpg" }, boardFramebuffer{ DEFAULT_WIDTH, DEFAULT_HEIGHT }
 #else
 BoardRenderer::BoardRenderer()
-  : VBO{ 0 }, VAO{ 0 }, EBO{ 0 }, cardShader{ "src\\card.vert", "src\\card.frag" },
+  : VBO{ 0 }, VAO{ 0 }, EBO{ 0 }, cardShader{ "card.vert", "card.frag" },
   cardBack{ "cardback.jpg" }, cardAtlas{ "cardfront.jpg" }, boardFramebuffer{ DEFAULT_WIDTH, DEFAULT_HEIGHT }
 #endif // !NDEBUG
 { 
@@ -119,7 +119,6 @@ void BoardRenderer::drawCard(uint32_t cardId)
   static Vector2 texScale = { 1.0f / 14.0f, 0.25f };
   Vector2 texOffset = ATLAS_CARD_COORDINATES[cardId % 13] + ATLAS_SUITE_OFFSETS[(cardId / 13) & 3];
   cardAtlas.bind(0);
-  cardShader.setFloat("cardZ", 1.0f);
   cardShader.setVec4("texTransform", { texScale[0], texScale[1], texOffset[0], texOffset[1] });
   glDrawElements(GL_TRIANGLES, sizeof(QUAD_VERTICES) / sizeof(uint32_t), GL_UNSIGNED_INT, 0);
 }

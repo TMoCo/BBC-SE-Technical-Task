@@ -5,4 +5,22 @@ All players draw two cards.
 Turn 1
 -------------------------------
 Player 1, choose an action.
-Your current score is 13.
+Your current score is 20.
+Player 1 decided to STAND.
+Player 2 decided to STAND.
+Player 3 decided to HIT.
+Player 4 decided to HIT.
+Player 5 decided to HIT.
+/!\ Player 5 has gone bust!
+-------------------------------
+Turn 2
+-------------------------------
+Player 3 decided to HIT.
+Player 4 decided to STAND.
+-------------------------------
+Turn 3
+-------------------------------
+Player 3 decided to STAND.
+Finding winner...
+The score to beat was 20.
+Congratulations player 1!
