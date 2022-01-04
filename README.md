@@ -91,4 +91,5 @@ Rendering the card fronts from a single texture is achieved by transforming the 
 Texture obtained from: [https://thumbs.dreamstime.com/b/playing-cards-texture-11014760.jpg](https://thumbs.dreamstime.com/b/playing-cards-texture-11014760.jpg)
 
 ### Version 3
-feature hand splitting, game variants, dealer
+
+<img src="https://user-images.githubusercontent.com/56483943/148135488-722add35-a0b5-431a-92f5-28921faeac25.png" alt="V2 Screenshot" width="100%"/>
