@@ -103,6 +103,7 @@ public:
 
 private:
   ImGuiTextBuffer buffer;
+
   std::vector<uint32_t> offsets;
 };
 

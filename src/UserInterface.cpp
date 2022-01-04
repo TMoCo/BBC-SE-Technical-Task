@@ -16,7 +16,7 @@
 #include <imgui_impl_opengl3.h>
 
 
-UserInterface::UserInterface() { }
+UserInterface::UserInterface() {}
 
 UserInterface& UserInterface::get()
 {
@@ -41,7 +41,6 @@ void UserInterface::set(Blackjack* blackjack, BoardRenderer* renderer)
     {
       if (ImGui::MenuItem("Start New"))
       {
-        // reset black jack
         blackjack->newGame = true;
       }
 
@@ -69,7 +68,7 @@ void UserInterface::set(Blackjack* blackjack, BoardRenderer* renderer)
   {
     playerOne.action = Action::HIT;
   }
-  ImGui::SameLine(0.0f);
+  ImGui::SameLine();
   if (ImGui::Button("Stand", { region.x * 0.5f, region.y * 0.2f }))
   {
     playerOne.action = Action::STAND;
@@ -78,6 +77,7 @@ void UserInterface::set(Blackjack* blackjack, BoardRenderer* renderer)
 
   region = ImGui::GetContentRegionAvail();
   ImGui::BeginChild("Log", { region.x * 0.3f, region.y });
+
   Log::draw();
   
   if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
@@ -93,8 +93,10 @@ void UserInterface::set(Blackjack* blackjack, BoardRenderer* renderer)
 
   float width = ImGui::GetWindowWidth();
   float numPlayers = (float)blackjack->players.size();
-  ImGui::InvisibleButton("padding", ImVec2(width / numPlayers * 0.5f, 0.5f));
+  ImGui::InvisibleButton("Padding1", ImVec2(width / numPlayers * 0.5f, 0.5f));
+  
   ImGui::SameLine();
+
   ImGui::PushItemWidth(width * 0.9f);
   if (ImGui::BeginTable("player names", (int)blackjack->players.size()-1))
   {
@@ -106,8 +108,22 @@ void UserInterface::set(Blackjack* blackjack, BoardRenderer* renderer)
     }
     ImGui::EndTable();
   }
+  ImGui::Image((void*)(intptr_t)renderer->boardFramebuffer.colourBuffer,
+    { region.x * 0.7f, region.y * 0.34f }, { 0.0f, 0.0f }, { 1.0f, -1.0f / 3.0f});
 
-  ImGui::Image((void*)(intptr_t)renderer->boardFramebuffer.colourBuffer, { region.x * 0.7f, region.y * 0.95f }, { 0.0f, 0.0f }, { 1.0f, -1.0f });
+  // dealer
+  ImGui::InvisibleButton("Padding2", ImVec2(width * 0.45f, 0.5f));
+  ImGui::SameLine();
+  ImGui::Text("Dealer");
+  ImGui::Image((void*)(intptr_t)renderer->boardFramebuffer.colourBuffer, 
+    { region.x * 0.7f, region.y * 0.24f }, { 0.0f, -1.15f / 3.0f }, { 1.0f, -1.85f / 3.0f });
+
+  // Player
+  ImGui::InvisibleButton("Padding3", ImVec2(width * 0.45f, 0.5f));
+  ImGui::SameLine();
+  ImGui::Text("Player 1");
+  ImGui::Image((void*)(intptr_t)renderer->boardFramebuffer.colourBuffer,
+    { region.x * 0.7f, region.y * 0.3f }, { 0.0f, -2.0f / 3.0f }, { 1.0f, -1.0f });
 
   ImGui::EndChild();
 

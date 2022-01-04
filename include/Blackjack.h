@@ -11,7 +11,6 @@
 #define BLACKJACK_H 1
 
 #include <glad/glad.h>
-
 #include <Player.h>
 #include <BoardRenderer.h>
 #include <Deck.h>
@@ -19,10 +18,17 @@
 #include <Framebuffer.h> 
 #include <Window.h>
 
+enum GameType : uint32_t
+{
+  NO_DEALER,
+  HOLE_CARD_GAME,
+};
+
 class Blackjack
 {
   friend class UserInterface;
   friend class BoardRenderer;
+  friend class Player;
 
 public:
   Blackjack();
@@ -48,7 +54,6 @@ protected:
   Player dealer;
 
   bool newGame, showHands;
-
 };
 
 #endif // !BLACKJACK_H 
