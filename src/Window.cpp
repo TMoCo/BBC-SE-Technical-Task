@@ -44,12 +44,12 @@ void Window::onResize(GLFWwindow* pWindow, int width, int height)
   }
 }
 
-Vector2 Window::getWindowSize()
+Vector2 Window::getWindowSize() const
 {
   return { (float)width, (float)height };
 }
 
-void Window::swap()
+void Window::swapBuffers()
 {
   glfwSwapBuffers(pWinGLFW);
 }

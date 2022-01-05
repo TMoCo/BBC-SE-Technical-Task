@@ -33,13 +33,12 @@ enum Action : uint32_t
 // strategy based on dealer's face up card
 static constexpr Action BASIC_STRATEGY[3][13] =
 {
-//    ace,   two, three,  four, five,    six, seven, eight,  nine,   ten,  jack, queen,  king    <- dealer front card 
+//    ace,   two, three,  four,  five,   six, seven, eight,  nine,   ten,  jack, queen,  king    <- dealer front card 
 //                                                                                                  score < 12 = HIT
   {   HIT,   HIT,   HIT, STAND, STAND, STAND,   HIT,   HIT,   HIT,   HIT,   HIT,   HIT,   HIT }, // score == 12
   {   HIT, STAND, STAND, STAND, STAND, STAND,   HIT,   HIT,   HIT,   HIT,   HIT,   HIT,   HIT }, // 12 < score < 17
   {   HIT, STAND, STAND, STAND, STAND, STAND, STAND, STAND, STAND, STAND, STAND, STAND, STAND }, // score == 17
 //                                                                                                  score > 17 = STAND
-
 };
 
 static constexpr Action BASIC_STRATEGY_SOFT[13] = 
@@ -54,13 +53,13 @@ public:
 
   uint32_t getScore();
 
-  uint32_t getScoreNoAces();
+  uint32_t getScoreWithoutAces();
 
   Action determineAction(Blackjack* game);
 
-  uint32_t countCards();
-
   bool hasAces();
+
+  void reset();
 
 public:
   PlayerState state;

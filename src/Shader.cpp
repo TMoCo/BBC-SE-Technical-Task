@@ -12,10 +12,10 @@
 
 Shader::Shader()
   : id{ 0 }, valid{ false }
-{ }
+{}
 
-Shader::Shader(const char* vs_path, const char* fs_path)
-  : id{ 0 }, valid{ false }
+Shader::Shader(const char* vs_path, const char* fs_path) 
+  : id{ 0 }, valid{ false } 
 {
   const std::vector<char> vs_data = getShaderCode(vs_path);
   const std::vector<char> fs_data = getShaderCode(fs_path);

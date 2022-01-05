@@ -42,14 +42,17 @@ constexpr char* SUITE_STRINGS[CARD_SUITS] =
   "Spades"
 };
 
-constexpr uint32_t CARD_VALUES[CARD_RANKS] = { 11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10 }; // omit ace, handled separately
+// A, 2, 3, 4, 5, 6, 7, 8, 9, 10, J, Q, K
+constexpr uint32_t CARD_VALUES[CARD_RANKS] = { 11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10 }; 
 
 class Deck
 {
 public:
-  Deck(bool shuffle = false);
+  Deck();
 
   uint32_t draw();
+
+  void shuffle();
 
 private:
   std::array<uint32_t, CARDS_TOTAL> cards;

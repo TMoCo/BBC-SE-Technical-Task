@@ -41,14 +41,14 @@ BoardRenderer::BoardRenderer()
 
   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
+
+  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 BoardRenderer::~BoardRenderer()
 {
-  /*
   glDeleteBuffers(1, &VBO);
   glDeleteBuffers(1, &EBO);
-  */
   glDeleteVertexArrays(1, &VAO);
 }
 
@@ -56,7 +56,7 @@ void BoardRenderer::drawBoard(Blackjack* blackjack, bool showHands)
 {
   // refresh board 
   boardFramebuffer.bind();
-  glClearColor(0.0f, 0.29921f, 0.13437f, 1.0f);
+  glClearColor(0.0f, 0.29921f, 0.13437f, 1.0f); // dark green
   glClear(GL_COLOR_BUFFER_BIT);
 
   // scale, positions and strides were empirically found to fit hands in the desired screen space
@@ -82,7 +82,7 @@ void BoardRenderer::drawBoard(Blackjack* blackjack, bool showHands)
     {
       float handScalar = 1.0f / (float)blackjack->players[i].hand.size();
       stride = { cardScale * handScalar * 0.8f, -0.1f * handScalar };
-      cardPosition = { -0.9f + cardScale * 0.5f + (i - 1) * 1.8f * cardScale, 0.8f - cardScale * 0.5f };
+      cardPosition = { (0.5f + (i - 1) * 1.8f) * cardScale - 0.9f, 0.8f - cardScale * 0.5f };
       for (auto& card : blackjack->players[i].hand)
       {
         cardShader.setVec2("cardPosition", cardPosition);
@@ -94,11 +94,10 @@ void BoardRenderer::drawBoard(Blackjack* blackjack, bool showHands)
     // dealer
     if (blackjack->type == GameType::HOLE_CARD_GAME)
     {
-      stride = { 1.25f * cardScale, 0.0f };
-
       cardScale = 0.2f;
       cardShader.setFloat("cardScale", cardScale);
 
+      stride = { 1.25f * cardScale, 0.0f };
       cardPosition = { blackjack->dealer.hand.size() * cardScale * -0.5f , 0.0f };
 
       for (int i = 0; i < blackjack->dealer.hand.size(); ++i)
@@ -115,7 +114,7 @@ void BoardRenderer::drawBoard(Blackjack* blackjack, bool showHands)
     {
       float handScalar = 1.0f / (float)blackjack->players[i].hand.size();
       stride = { cardScale * handScalar * 0.8f, -0.1f * handScalar };
-      cardPosition = { -0.9f + cardScale * 0.5f + (i - 1) * 1.8f * cardScale, 0.8f - cardScale * 0.5f };
+      cardPosition = { -0.9f + (0.5f + (i - 1) * 1.8f) * cardScale, 0.8f - cardScale * 0.5f };
       for (auto& card : blackjack->players[i].hand)
       {
         cardShader.setVec2("cardPosition", cardPosition);
@@ -126,16 +125,15 @@ void BoardRenderer::drawBoard(Blackjack* blackjack, bool showHands)
 
     if (blackjack->type == GameType::HOLE_CARD_GAME)
     {
-      // dealer
-      stride = { 1.25f * cardScale, 0.0f };
-    
+      // dealer    
       cardScale = 0.2f;
       cardShader.setFloat("cardScale", cardScale);
     
+      stride = { 1.25f * cardScale, 0.0f };
       cardPosition = { blackjack->dealer.hand.size() * cardScale * -0.5f , 0.0f };
       cardShader.setVec2("cardPosition", cardPosition);
     
-      drawCard(blackjack->dealer.hand.front());
+      drawCard(blackjack->dealer.hand.front()); // reveal first card
       cardPosition += stride;
 
       for (int i = 1; i < blackjack->dealer.hand.size(); ++i)
@@ -150,18 +148,19 @@ void BoardRenderer::drawBoard(Blackjack* blackjack, bool showHands)
 
 void BoardRenderer::drawCardBack()
 {
-  static Vector2 texCoordScale = { 1.0f, 1.0f };
-  cardBack.bind(0); // card back texture
+  cardBack.bind(0);
   cardShader.setVec4("texTransform", { 1.0f, 1.0f, 0.0f, 0.0f });
+  
   glDrawElements(GL_TRIANGLES, sizeof(QUAD_INDICES) / sizeof(uint32_t), GL_UNSIGNED_INT, 0);
 }
 
 void BoardRenderer::drawCard(uint32_t cardId)
 {
-  // given a card scale and a card position, build an affine transform for the card's texture coordinates
-  static Vector2 texScale = { 1.0f / 14.0f, 0.25f };
-  Vector2 texOffset = ATLAS_CARD_COORDINATES[cardId % 13] + ATLAS_SUITE_OFFSETS[(cardId / 13) & 3];
+  Vector2 texOffset = 
+    ATLAS_CARD_COORDINATES[cardId % CARD_RANKS] + ATLAS_SUITE_OFFSETS[(cardId / CARD_RANKS) & 3]; // % 4
+
   cardAtlas.bind(0);
-  cardShader.setVec4("texTransform", { texScale[0], texScale[1], texOffset[0], texOffset[1] });
+  cardShader.setVec4("texTransform", { 1.0f / 14.0f, 0.25f, texOffset[0], texOffset[1] });
+  
   glDrawElements(GL_TRIANGLES, sizeof(QUAD_VERTICES) / sizeof(uint32_t), GL_UNSIGNED_INT, 0);
 }

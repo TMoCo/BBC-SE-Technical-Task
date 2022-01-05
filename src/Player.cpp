@@ -13,7 +13,7 @@
 
 Player::Player(bool isAi)
   : isAi{ isAi }, state{ PlayerState::PLAYING }, hand{}, action{ Action::NONE }
-{ }
+{}
 
 uint32_t Player::getScore()
 {
@@ -33,7 +33,7 @@ uint32_t Player::getScore()
   return score;
 }
 
-uint32_t Player::getScoreNoAces()
+uint32_t Player::getScoreWithoutAces()
 {
   uint32_t aces = 0, score = 0;
   for (uint32_t& card : hand)
@@ -44,27 +44,12 @@ uint32_t Player::getScoreNoAces()
   return score;
 }
 
-uint32_t Player::countCards()
-{
-  uint32_t count = 0; // accumulate the total bits set in hand
-  for (uint32_t i = 0; i < CARDS_TOTAL / CARD_RANKS; ++i)
-  {
-    uint16_t suite = hand[i];
-    for (; suite; count++)
-    {
-      suite &= suite - 1; // clear the least significant bit set
-    }
-  }
-  return count;
-}
-
 Action Player::determineAction(Blackjack* game)
 {
-  // determine if player has an ace
-  uint32_t score = getScore();
-
+  uint32_t score;
   if (game->type == GameType::NO_DEALER)
   {
+    score = getScore();
     if (hasAces())
     {
       if (score < 13)
@@ -108,6 +93,7 @@ Action Player::determineAction(Blackjack* game)
     }
     else
     {
+      score = getScore();
       if (score < 12)
       {
         action = Action::HIT;
@@ -141,4 +127,11 @@ bool Player::hasAces()
     hasAces |= (1 << (card % 13)) & 1; // 0 = false, !0 = true
   }
   return hasAces;
+}
+
+void Player::reset()
+{
+  hand.clear();
+  state = PlayerState::PLAYING;
+  action = Action::NONE;
 }

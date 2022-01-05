@@ -25,12 +25,13 @@ public:
   Window();
 
   Window(uint32_t width, uint32_t height, const char* name = "Window", bool makeCurrent = true);
+  
+  void swapBuffers();
 
+  Vector2 getWindowSize() const;
+
+private:
   static void onResize(GLFWwindow* window, int width, int height);
-
-  void swap();
-
-  Vector2 getWindowSize();
 
 protected:
   GLFWwindow* pWinGLFW;

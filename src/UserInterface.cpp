@@ -15,7 +15,6 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
-
 UserInterface::UserInterface() {}
 
 UserInterface& UserInterface::get()
@@ -30,9 +29,10 @@ void UserInterface::set(Blackjack* blackjack, BoardRenderer* renderer)
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
     
-  Vector2 windowSize = blackjack->window.getWindowSize();
+  static Vector2 windowSize = blackjack->window.getWindowSize();
   ImGui::SetNextWindowSize({ windowSize[0], windowSize[1] });
   ImGui::SetNextWindowPos({ 0.0f, 0.0f });
+
   ImGui::Begin("Main", NULL, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize);
 
   if (ImGui::BeginMenuBar())
@@ -71,6 +71,11 @@ void UserInterface::set(Blackjack* blackjack, BoardRenderer* renderer)
 
   static Player& playerOne = blackjack->players.front();
   ImVec2 region = ImGui::GetContentRegionAvail();
+
+  //
+  // Action Buttons
+  //
+
   if (ImGui::Button("Hit", { region.x * 0.5f, region.y * 0.2f }))
   {
     playerOne.action = Action::HIT;
@@ -80,30 +85,33 @@ void UserInterface::set(Blackjack* blackjack, BoardRenderer* renderer)
   {
     playerOne.action = Action::STAND;
   }
+
   ImGui::Separator();
+
+  //
+  // Game Log
+  //
 
   region = ImGui::GetContentRegionAvail();
   ImGui::BeginChild("Log", { region.x * 0.3f, region.y });
-
-  Log::draw();
-  
+  Log::draw();  
   if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
   {
     ImGui::SetScrollHereY(1.0f);
   }
-
   ImGui::EndChild();
   
   ImGui::SameLine();
 
+  //
+  // Board render
+  //
+
   ImGui::BeginChild("Board", { region.x * 0.7f, region.y});
-
-  float width = ImGui::GetWindowWidth();
-  float numPlayers = (float)blackjack->players.size();
+  static float width = ImGui::GetWindowWidth();
+  static float numPlayers = (float)blackjack->players.size();
   ImGui::InvisibleButton("Padding1", ImVec2(width / numPlayers * 0.5f, 0.5f));
-  
   ImGui::SameLine();
-
   // draw other player hands
   ImGui::PushItemWidth(width * 0.9f);
   if (ImGui::BeginTable("player names", (int)blackjack->players.size()-1))
@@ -116,7 +124,6 @@ void UserInterface::set(Blackjack* blackjack, BoardRenderer* renderer)
     }
     ImGui::EndTable();
   }
-
   if (blackjack->type == GameType::NO_DEALER)
   {
     ImGui::Image((void*)(intptr_t)renderer->boardFramebuffer.colourBuffer,
@@ -148,14 +155,11 @@ void UserInterface::set(Blackjack* blackjack, BoardRenderer* renderer)
     ImGui::Image((void*)(intptr_t)renderer->boardFramebuffer.colourBuffer,
       { width, region.y * 0.3f }, { 0.0f, -2.0f / 3.0f }, { 1.0f, -1.0f });
   }
-
-
   ImGui::EndChild();
 
   // ImGui::ShowDemoWindow();
 
   ImGui::End();
-
 }
 
 void UserInterface::draw()

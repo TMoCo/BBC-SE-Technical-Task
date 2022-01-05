@@ -6,7 +6,6 @@
 * The game of Blackjack
 */
 
-
 #ifndef BLACKJACK_H
 #define BLACKJACK_H 1
 

@@ -11,26 +11,13 @@
 #include <random>
 #include <iostream>
 
-Deck::Deck(bool shuffle)
+Deck::Deck()
   : cards{}, topOfDeck{ 0 }
 {
-  // populate cards
+  // generate card ids
   for (uint32_t i = 0; i < CARDS_TOTAL; ++i)
   {
     cards[i] = i;
-  }
-
-  if (shuffle)
-  {
-    static std::random_device rd;
-    static std::mt19937 generator(rd());
-    static std::uniform_int_distribution<uint32_t> distribution(0, CARDS_TOTAL - 1);
-
-    // swap cards arbitrarily
-    for (int i = 0; i < 10000; ++i)
-    {
-      std::swap(cards[distribution(generator)], cards[distribution(generator)]);
-    }
   }
 }
 
@@ -43,4 +30,19 @@ uint32_t Deck::draw()
   }
 
   return cards[topOfDeck++];
+}
+
+void Deck::shuffle()
+{
+  static std::random_device rd;
+  static std::mt19937 generator(rd());
+  static std::uniform_int_distribution<uint32_t> distribution(0, CARDS_TOTAL - 1);
+
+  // swap cards arbitrarily
+  for (int i = 0; i < 10000; ++i)
+  {
+    std::swap(cards[distribution(generator)], cards[distribution(generator)]);
+  }
+
+  topOfDeck = 0; // reset top card position
 }

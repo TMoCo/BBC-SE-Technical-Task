@@ -3,7 +3,7 @@
 * Date Created: 02/01/2022
 * Copyright 2022 under MIT License
 *
-* User interface class
+* User interface singleton class
 */
 
 #ifndef USER_INTERFACE_H

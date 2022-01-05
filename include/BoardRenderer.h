@@ -59,6 +59,7 @@ static const Vector2 ATLAS_SUITE_OFFSETS[4]
 class BoardRenderer
 {
   friend class Blackjack;
+  friend class UserInterface;
 public:
   BoardRenderer();
 
@@ -70,13 +71,12 @@ public:
 
   void drawBoard(Blackjack* blackjack, bool showHands);
 
-public:
+protected:
   Framebuffer boardFramebuffer;
 
-protected:
+private:
   Shader cardShader;
 
-private:
   Texture cardBack, cardAtlas;
 
   uint32_t VBO, VAO, EBO;

@@ -14,9 +14,9 @@
 #include <Shader.h>
 #include <thomath.h>
 
-Blackjack::Blackjack()
-  :type{ GameType::NO_DEALER }, newGame{ false }, showHands{ false }
-{ }
+Blackjack::Blackjack() 
+  : type{ GameType::NO_DEALER }, newGame{ false }, showHands{ false } 
+{}
 
 int Blackjack::init()
 {
@@ -46,19 +46,16 @@ int Blackjack::init()
 
 void Blackjack::reset(uint32_t& stopMask, uint32_t& turnCount)
 {
-  deck = Deck{ true }; // refresh deck
+  deck.shuffle();
 
   Log::get()->clear();
   Log::add("-------------------------------\nNew game started!\nAll players draw two cards.\n");
 
-  dealer.hand.clear();
-  dealer.state = PlayerState::PLAYING;
+  dealer.reset();
 
   for (int i = 0; i < players.size(); ++i)
   {
-    players[i].state  = PlayerState::PLAYING;
-    players[i].action = Action::NONE;
-    players[i].hand.clear();
+    players[i].reset();
     players[i].hand.push_back(deck.draw());
   }
   dealer.hand.push_back(deck.draw());
@@ -71,7 +68,6 @@ void Blackjack::reset(uint32_t& stopMask, uint32_t& turnCount)
 
   stopMask = 0;
   turnCount = 1;
-
   newGame = false;
 }
 
@@ -91,8 +87,6 @@ int Blackjack::play(int numPlayers)
 
   // init renderer
   BoardRenderer renderer;
-
-  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
   // init players
   players.resize((size_t)numPlayers);
@@ -133,13 +127,11 @@ int Blackjack::play(int numPlayers)
       // process player's turn only if they can play
       if (!(stopMask & (1 << currentPlayer)))
       {
-
         if (player.isAi)
         {
           player.determineAction(this);
         }
 
-        // user input here determines action taken
         if (player.action != Action::NONE)
         {
           if (player.action == Action::HIT)
@@ -212,7 +204,7 @@ int Blackjack::play(int numPlayers)
 
     UserInterface::get().draw();
 
-    window.swap();
+    window.swapBuffers();
     glfwPollEvents();
   }
 
@@ -368,11 +360,11 @@ void Blackjack::getWinners()
         }
       }
     }
-    Log::add("The score to beat was %u.\n", highestScore);
 
-    if (_mm_popcnt_u32(winnersMask) > 1) // if we have multiple winners check for ties
+    Log::add("The score to beat was %u.\n", highestScore);
+    if (_mm_popcnt_u32(winnersMask) > 1) // if we have multiple winners
     {
-      Log::add("It's a tie!\n");
+      Log::add("It's a tie at the top!\n");
     }
 
     // display the winner
