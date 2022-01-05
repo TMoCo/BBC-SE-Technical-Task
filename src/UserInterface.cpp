@@ -39,8 +39,15 @@ void UserInterface::set(Blackjack* blackjack, BoardRenderer* renderer)
   {
     if (ImGui::BeginMenu("Game"))
     {
-      if (ImGui::MenuItem("Start New"))
+      if (ImGui::MenuItem("Play new game without dealer"))
       {
+        blackjack->type = GameType::NO_DEALER;
+        blackjack->newGame = true;
+      }
+
+      if (ImGui::MenuItem("Play new game with dealer (hole card)"))
+      {
+        blackjack->type = GameType::HOLE_CARD_GAME;
         blackjack->newGame = true;
       }
 
@@ -97,6 +104,7 @@ void UserInterface::set(Blackjack* blackjack, BoardRenderer* renderer)
   
   ImGui::SameLine();
 
+  // draw other player hands
   ImGui::PushItemWidth(width * 0.9f);
   if (ImGui::BeginTable("player names", (int)blackjack->players.size()-1))
   {
@@ -108,22 +116,39 @@ void UserInterface::set(Blackjack* blackjack, BoardRenderer* renderer)
     }
     ImGui::EndTable();
   }
-  ImGui::Image((void*)(intptr_t)renderer->boardFramebuffer.colourBuffer,
-    { region.x * 0.7f, region.y * 0.34f }, { 0.0f, 0.0f }, { 1.0f, -1.0f / 3.0f});
 
-  // dealer
-  ImGui::InvisibleButton("Padding2", ImVec2(width * 0.45f, 0.5f));
-  ImGui::SameLine();
-  ImGui::Text("Dealer");
-  ImGui::Image((void*)(intptr_t)renderer->boardFramebuffer.colourBuffer, 
-    { region.x * 0.7f, region.y * 0.24f }, { 0.0f, -1.15f / 3.0f }, { 1.0f, -1.85f / 3.0f });
+  if (blackjack->type == GameType::NO_DEALER)
+  {
+    ImGui::Image((void*)(intptr_t)renderer->boardFramebuffer.colourBuffer,
+      { width, region.y * 0.45f }, { 0.0f, 0.0f }, { 1.0f, -1.0f / 3.0f });
 
-  // Player
-  ImGui::InvisibleButton("Padding3", ImVec2(width * 0.45f, 0.5f));
-  ImGui::SameLine();
-  ImGui::Text("Player 1");
-  ImGui::Image((void*)(intptr_t)renderer->boardFramebuffer.colourBuffer,
-    { region.x * 0.7f, region.y * 0.3f }, { 0.0f, -2.0f / 3.0f }, { 1.0f, -1.0f });
+    // draw player hands
+    ImGui::InvisibleButton("Padding3", ImVec2(width * 0.45f, 0.5f));
+    ImGui::SameLine();
+    ImGui::Text("Player 1");
+    ImGui::Image((void*)(intptr_t)renderer->boardFramebuffer.colourBuffer,
+      { width, region.y * 0.45f }, { 0.0f, -2.0f / 3.0f }, { 1.0f, -1.0f });
+  }
+  else if (blackjack->type == GameType::HOLE_CARD_GAME)
+  {
+    ImGui::Image((void*)(intptr_t)renderer->boardFramebuffer.colourBuffer,
+      { width, region.y * 0.34f }, { 0.0f, 0.0f }, { 1.0f, -1.0f / 3.0f});
+
+    // draw dealer
+    ImGui::InvisibleButton("Padding2", ImVec2(width * 0.45f, 0.5f));
+    ImGui::SameLine();
+    ImGui::Text("Dealer");
+    ImGui::Image((void*)(intptr_t)renderer->boardFramebuffer.colourBuffer, 
+      { width, region.y * 0.24f }, { 0.0f, -1.15f / 3.0f }, { 1.0f, -1.85f / 3.0f });
+
+    // draw player hands
+    ImGui::InvisibleButton("Padding3", ImVec2(width * 0.45f, 0.5f));
+    ImGui::SameLine();
+    ImGui::Text("Player 1");
+    ImGui::Image((void*)(intptr_t)renderer->boardFramebuffer.colourBuffer,
+      { width, region.y * 0.3f }, { 0.0f, -2.0f / 3.0f }, { 1.0f, -1.0f });
+  }
+
 
   ImGui::EndChild();
 

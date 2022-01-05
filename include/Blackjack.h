@@ -52,6 +52,8 @@ protected:
   std::vector<Player> players;
 
   Player dealer;
+  
+  GameType type;
 
   bool newGame, showHands;
 };
