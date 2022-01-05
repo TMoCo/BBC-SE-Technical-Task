@@ -91,5 +91,6 @@ Rendering the card fronts from a single texture is achieved by transforming the 
 Texture obtained from: [https://thumbs.dreamstime.com/b/playing-cards-texture-11014760.jpg](https://thumbs.dreamstime.com/b/playing-cards-texture-11014760.jpg)
 
 ### Version 3
-
-<img src="https://user-images.githubusercontent.com/56483943/148135488-722add35-a0b5-431a-92f5-28921faeac25.png" alt="V2 Screenshot" width="100%"/>
+In version three you can switch between playing against other players trying to get the highest score, or play like in a US casion against a dealer with a card in the hole. In this version, the dealer does not draw when dealt an initial soft seventeen and the game is played with 4 playing card decks. The normal rules are followed: beating the dealer requires a hand with a higher score, tying if the hand is worth the same or losing when the score is smaller. A natural 21 from the player beats the dealer if the latter also gets 21. A natural 21 from the dealer can only be tied with another player's natural. Other players will choose to either hit or draw based on the dealer's revealed card following the [basic strategy for playing with 4 to 8 deck of cards](https://en.wikipedia.org/wiki/Blackjack#Basic_strategy).
+<img src="https://user-images.githubusercontent.com/56483943/148238338-41509c23-15f1-43e3-9a83-80993409e3d8.png" alt="Against the dealer" width="100%"/>
+<img src="https://user-images.githubusercontent.com/56483943/148238457-ea419fce-3461-4199-a2e3-982ed5b085d2.png" alt="Against other players" width="100%"/>
