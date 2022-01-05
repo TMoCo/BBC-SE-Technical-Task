@@ -18,7 +18,7 @@ I have chosen to implement this application in C++ as this is the language I am 
 Cards are uniquely identified by an unsigned integer id. Using the modulus operator and integer division, it's suite and rank can easily be retrieved. For instance with the set of suites { hearts, diamonds, clubs, spades }, the card with id 32 is a 6 of clubs (32 % 13 = 6 and 32 / 13 = 2 where the third suite is clubs). This allows for flexibility in the number of decks the game can use (Blackjack is commonly played with 1 to 8 decks).
 
 A deck of cards is modeled by an array of N x 52 cards and is shuffled by repeatedly swapping two cards at random positions in the deck. A player's hand consists of an STL vector of unsigned integers which expansd whenever a card is drawn. Computing player scores is achieved by looping over the hand's values and adding the card's score by deducing it's rank which is used as an index into a 13 element array of scores. Aces need to be handled a little differently, as they can represent a value of 11 or 1 depending on the hand of the player. The algorithm initially adds them to the score as 11 whilst also keeping count of them. To count them without branching, we bit-shift 1 to the left by the card's rank to get a power of two (eg: 16 % 13 = 3, 1 << 3 = 2^3 or 1000 in binary). This is then bit-anded with the ace's binary encoding of 1 << 0 or simply 1 which is added to the aces tally. If the score is greater than 21 and there are aces, we can subtract 10 to the score to effectively turn them into 1 valued aces.
-```cplusplus
+```cpp
 uint32_t Player::getScore()
 {
   uint32_t aces = 0, score = 0;
@@ -57,7 +57,7 @@ The board is rendered every time it is updated. The occasions for update are:
 - Player 1 wants to cheat and show all hands
 - All players are either bust or standing and the winner(s) is decided
 
-```cplusplus
+```cpp
 // refresh board 
 boardFramebuffer.bind();
 glClearColor(0.0f, 0.29921f, 0.13437f, 1.0f);
@@ -74,20 +74,22 @@ for (auto& card : blackjack->players.front().hand)
   cardPosition += stride;
 }
 
-// render other players' hands
-...
+// render other players' hands ...
 ```
 The above code snippet shows how the board is rendered. The buffer is bound and cleared with the dark green colour and shader uniforms are set. These affect the scale and position of the rendered card. Because depth testing is disabled, cards will be rendered on top of each other and give the stacking effect for free. Furthermore, switching between showing or hiding the other hands is simply a case of changing the texture used as the new cards will be rendered directly on top of the previous ones. Because the board is rendered in 2D, there is no need to apply Model, View or Projection transforms and coordinates are passed to the shader already in normalized device coordinates.
 
-Rendering the card fronts from a single texture is achieved by transforming the quad's UV texture coordinates depending on the card to be rendered:
+Rendering the card fronts from a single texture is achieved by applying an affine transformation to the quad's UV texture coordinates depending on the rank and suite of the card to be rendered:
+```cpp
+void BoardRenderer::drawCard(uint32_t cardId)
+{
+  Vector2 texOffset = 
+    ATLAS_CARD_COORDINATES[cardId % CARD_RANKS] + ATLAS_SUITE_OFFSETS[(cardId / CARD_RANKS) & 3]; // % 4
 
-```cpluplus
-// given a card scale and a card position, build an affine transform for the card's texture coordinates
- static Vector2 texScale = { 1.0f / 14.0f, 0.25f };
- Vector2 texOffset = ATLAS_CARD_COORDINATES[cardId % 13] + ATLAS_SUITE_OFFSETS[(cardId / 13) & 3];
- cardAtlas.bind(0);
- cardShader.setVec4("texTransform", { texScale[0], texScale[1], texOffset[0], texOffset[1] });
- glDrawElements(GL_TRIANGLES, sizeof(QUAD_VERTICES) / sizeof(uint32_t), GL_UNSIGNED_INT, 0);
+  cardAtlas.bind(0);
+  cardShader.setVec4("texTransform", { 1.0f / 14.0f, 0.25f, texOffset[0], texOffset[1] });
+  
+  glDrawElements(GL_TRIANGLES, sizeof(QUAD_VERTICES) / sizeof(uint32_t), GL_UNSIGNED_INT, 0);
+}
 ```
 ![cardfront](https://user-images.githubusercontent.com/56483943/148094518-e3ea94a1-4b5d-4541-be0e-298f29e6e71e.jpg)
 Texture obtained from: [https://thumbs.dreamstime.com/b/playing-cards-texture-11014760.jpg](https://thumbs.dreamstime.com/b/playing-cards-texture-11014760.jpg)
