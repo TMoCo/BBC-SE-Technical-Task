@@ -7,15 +7,17 @@ The game functions by letting players perform different actions, like hitting or
 
 In Casinos, players bet money on whether their hand will beat the dealer's and often have more than one deck of 52 cards used (up to 8). The dealer plays after all other players are either standing or bust by repeatedly hitting until their hand is worth at least 17.
 
-To play the game, download the executable and place it in a directory with the two textures and two shaders. Run it on the command line with an integer argument for the number of players (5 to 9).
-
+To play the game, download the executable. Make sure to place it in the same directory as the two textures _(cardback.jpg, cardfront.jpg)_ and two shaders _(card.vert, card.frag)_. Run it on the command line with an integer argument for the number of players (5 to 9).
+```
+C:\Blackjack.exe 5
+```
 ## Design and implementation
 I have chosen to implement this application in C++ as this is the language I am the most comfortable in and allows me to add graphics to the application.
 
 ### Version 1
 Cards are uniquely identified by an unsigned integer id. Using the modulus operator and integer division, it's suite and rank can easily be retrieved. For instance with the set of suites { hearts, diamonds, clubs, spades }, the card with id 32 is a 6 of clubs (32 % 13 = 6 and 32 / 13 = 2 where the third suite is clubs). This allows for flexibility in the number of decks the game can use (Blackjack is commonly played with 1 to 8 decks).
 
-A deck of cards is modeled by an array of N x 52 cards and is shuffled by repeatedly swapping two cards at random positions in the deck. A player's hand consists of an STL vector of unsigned integers which expansd whenever a card is drawn. Computing player scores is achieved by looping over the hand's values and adding the card's score by deducing it's rank which is used as an index into a 13 element array of scores. Aces need to be handled a little differently, as they can represent a value of 11 or 1 depending on the hand of the player. The algorithm initially adds them to the score as 11 whilst also keeping count of them. To count them without branching, we bit-shift 1 to the left by the card's rank to get a power of two (eg: 16 % 13 = 3, 1 << 3 = 2^3 or 1000 in binary). This is then bit-anded with the ace's binary encoding which is 1 << 0 or simply 1, which returns 1 and is added to the aces tally. If the score is greater than 21 and there are aces, we can subtract 10 to the score to effectively turn them into 1 valued aces.
+A deck of cards is modeled by an array of N x 52 cards and is shuffled by repeatedly swapping two cards at random positions in the deck. A player's hand consists of an STL vector of unsigned integers which expansd whenever a card is drawn. Computing player scores is achieved by looping over the hand's values and adding the card's score by deducing it's rank which is used as an index into a 13 element array of scores. Aces need to be handled a little differently, as they can represent a value of 11 or 1 depending on the hand of the player. The algorithm initially adds them to the score as 11 whilst also keeping count of them. To count them without branching, we bit-shift 1 to the left by the card's rank to get a power of two (eg: 16 % 13 = 3, 1 << 3 = 2^3 or 1000 in binary). This is then bit-anded with the ace's binary encoding of 1 << 0 or simply 1 which is added to the aces tally. If the score is greater than 21 and there are aces, we can subtract 10 to the score to effectively turn them into 1 valued aces.
 ```cplusplus
 uint32_t Player::getScore()
 {
