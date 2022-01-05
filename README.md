@@ -7,8 +7,10 @@ The game functions by letting players perform different actions, like hitting or
 
 In Casinos, players bet money on whether their hand will beat the dealer's and often have more than one deck of 52 cards used (up to 8). The dealer plays after all other players are either standing or bust by repeatedly hitting until their hand is worth at least 17.
 
-To play the game, download the executable and place it in a directory with the two textures and two shaders. Run it on the command line with an integer argument for the number of players (5 to 9).
-
+To play the game, download the executable. Make sure to place it in the same directory as the two textures _(cardback.jpg, cardfront.jpg)_ and two shaders _(card.vert, card.frag)_. Run it on the command line with an integer argument for the number of players (5 to 9).
+```
+C:\Blackjack.exe 5
+```
 ## Design and implementation
 I have chosen to implement this application in C++ as this is the language I am the most comfortable in and allows me to add graphics to the application.
 
