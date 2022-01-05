@@ -12,9 +12,9 @@
 #include <cstdint>
 #include <array>
 
-constexpr uint32_t NUM_DECKS = 1;
-constexpr uint32_t CARD_RANKS = 13;
-constexpr uint32_t CARD_SUITS = 4;
+constexpr uint32_t NUM_DECKS   = 4;
+constexpr uint32_t CARD_RANKS  = 13;
+constexpr uint32_t CARD_SUITS  = 4;
 constexpr uint32_t CARDS_TOTAL = CARD_RANKS * CARD_SUITS * NUM_DECKS;
 
 constexpr char* CARD_STRINGS[CARD_RANKS] =

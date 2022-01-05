@@ -6,13 +6,11 @@
 * Class representing a Blackjack player
 */
 
-
 #ifndef PLAYER_H
 #define PLAYER_H 1
 
 #include <cstdint>
 #include <vector>
-
 #include <Deck.h>
 
 constexpr int MAX_NUM_PLAYERS = 9;
@@ -32,6 +30,21 @@ enum Action : uint32_t
   STAND
 };
 
+// strategy based on dealer's face up card
+static constexpr Action BASIC_STRATEGY[3][13] =
+{
+//    ace,   two, three,  four, five,    six, seven, eight,  nine,   ten,  jack, queen,  king    <- dealer front card 
+//                                                                                                  score < 12 = HIT
+  {   HIT,   HIT,   HIT, STAND, STAND, STAND,   HIT,   HIT,   HIT,   HIT,   HIT,   HIT,   HIT }, // score == 12
+  {   HIT, STAND, STAND, STAND, STAND, STAND,   HIT,   HIT,   HIT,   HIT,   HIT,   HIT,   HIT }, // 12 < score < 17
+  {   HIT, STAND, STAND, STAND, STAND, STAND, STAND, STAND, STAND, STAND, STAND, STAND, STAND }, // score == 17
+//                                                                                                  score > 17 = STAND
+
+};
+
+static constexpr Action BASIC_STRATEGY_SOFT[13] = 
+{ HIT, STAND, STAND, STAND, STAND, STAND, STAND, STAND, HIT, HIT, HIT, HIT, HIT };
+
 class Blackjack;
 
 class Player
@@ -39,13 +52,11 @@ class Player
 public:
   Player(bool isAi = true);
 
-  void setCardBit(uint32_t cardId);
-
   uint32_t getScore();
 
-  Action determineAction(Blackjack* game);
+  uint32_t getScoreNoAces();
 
-  uint32_t countCardRankBits(uint32_t rank);
+  Action determineAction(Blackjack* game);
 
   uint32_t countCards();
 

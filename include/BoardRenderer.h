@@ -77,7 +77,6 @@ protected:
   Shader cardShader;
 
 private:
-
   Texture cardBack, cardAtlas;
 
   uint32_t VBO, VAO, EBO;

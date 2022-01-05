@@ -13,8 +13,8 @@
 #include <cstdint>
 #include <GLFW/glfw3.h>
 
-constexpr uint32_t DEFAULT_WIDTH = 800;
-constexpr uint32_t DEFAULT_HEIGHT = 600;
+constexpr uint32_t DEFAULT_WIDTH = 1200;
+constexpr uint32_t DEFAULT_HEIGHT = 800;
 
 class Window
 {

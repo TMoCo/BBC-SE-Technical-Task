@@ -59,9 +59,11 @@ void BoardRenderer::drawBoard(Blackjack* blackjack, bool showHands)
   glClearColor(0.0f, 0.29921f, 0.13437f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
 
+  // scale, positions and strides were empirically found to fit hands in the desired screen space
   float cardScale = 0.3f;
   cardShader.setFloat("cardScale", cardScale);
   Vector2 stride = { 1.2f * cardScale, 0.0f }, cardPosition = { -0.8f, -0.65f };
+  
   // render player 1's hand
   for (auto& card : blackjack->players.front().hand)
   {
@@ -70,9 +72,10 @@ void BoardRenderer::drawBoard(Blackjack* blackjack, bool showHands)
     cardPosition += stride;
   }
 
-  // render other players' hands
   cardScale = 1.0f / (blackjack->players.size() - 1);
   cardShader.setFloat("cardScale", cardScale);
+  
+  // render other players' hands
   if (showHands)
   {
     for (int i = 1; i < blackjack->players.size(); ++i)
@@ -84,6 +87,24 @@ void BoardRenderer::drawBoard(Blackjack* blackjack, bool showHands)
       {
         cardShader.setVec2("cardPosition", cardPosition);
         drawCard(card);
+        cardPosition += stride;
+      }
+    }
+
+    // dealer
+    if (blackjack->type == GameType::HOLE_CARD_GAME)
+    {
+      stride = { 1.25f * cardScale, 0.0f };
+
+      cardScale = 0.2f;
+      cardShader.setFloat("cardScale", cardScale);
+
+      cardPosition = { blackjack->dealer.hand.size() * cardScale * -0.5f , 0.0f };
+
+      for (int i = 0; i < blackjack->dealer.hand.size(); ++i)
+      {
+        cardShader.setVec2("cardPosition", cardPosition);
+        drawCard(blackjack->dealer.hand[i]);
         cardPosition += stride;
       }
     }
@@ -99,6 +120,28 @@ void BoardRenderer::drawBoard(Blackjack* blackjack, bool showHands)
       {
         cardShader.setVec2("cardPosition", cardPosition);
         blackjack->players[i].state == PlayerState::BUST ? drawCard(card) : drawCardBack();
+        cardPosition += stride;
+      }
+    }
+
+    if (blackjack->type == GameType::HOLE_CARD_GAME)
+    {
+      // dealer
+      stride = { 1.25f * cardScale, 0.0f };
+    
+      cardScale = 0.2f;
+      cardShader.setFloat("cardScale", cardScale);
+    
+      cardPosition = { blackjack->dealer.hand.size() * cardScale * -0.5f , 0.0f };
+      cardShader.setVec2("cardPosition", cardPosition);
+    
+      drawCard(blackjack->dealer.hand.front());
+      cardPosition += stride;
+
+      for (int i = 1; i < blackjack->dealer.hand.size(); ++i)
+      {
+        cardShader.setVec2("cardPosition", cardPosition);
+        drawCardBack();
         cardPosition += stride;
       }
     }

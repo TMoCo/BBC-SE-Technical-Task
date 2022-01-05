@@ -15,7 +15,7 @@
 #include <thomath.h>
 
 Blackjack::Blackjack()
-  : newGame{ false }, showHands{ false }
+  :type{ GameType::NO_DEALER }, newGame{ false }, showHands{ false }
 { }
 
 int Blackjack::init()
@@ -51,24 +51,23 @@ void Blackjack::reset(uint32_t& stopMask, uint32_t& turnCount)
   Log::get()->clear();
   Log::add("-------------------------------\nNew game started!\nAll players draw two cards.\n");
 
-  Vector2 stride = Vector2{ 0.9f, 0.0f } / (float)(players.size() - 1);
-  // now draw remaining players
+  dealer.hand.clear();
+  dealer.state = PlayerState::PLAYING;
+
   for (int i = 0; i < players.size(); ++i)
   {
-    Player& player = players[i];
-    player.hand.clear();
-
-    // draw two cards
-    uint32_t card = deck.draw();
-    players[i].hand.push_back(card);
-    //Log::add("Player %u drew %s of %s\n", i + 1, CARD_STRINGS[card % CARD_RANKS], SUITE_STRINGS[card / CARD_RANKS]);
-    card = deck.draw();
-    players[i].hand.push_back(card);
-    //Log::add("Player %u drew %s of %s\n", i + 1, CARD_STRINGS[card % CARD_RANKS], SUITE_STRINGS[card / CARD_RANKS]);
-    
-    //Log::add("Updated score is %u\n", players[i].getScore());
-    players[i].state = PlayerState::PLAYING;
+    players[i].state  = PlayerState::PLAYING;
+    players[i].action = Action::NONE;
+    players[i].hand.clear();
+    players[i].hand.push_back(deck.draw());
   }
+  dealer.hand.push_back(deck.draw());
+
+  for (int i = 0; i < players.size(); ++i)
+  {
+    players[i].hand.push_back(deck.draw());
+  }
+  dealer.hand.push_back(deck.draw());
 
   stopMask = 0;
   turnCount = 1;
@@ -100,12 +99,12 @@ int Blackjack::play(int numPlayers)
   players.front().isAi = false;
 
   // reset game management
-  uint32_t stopMask, turnCount;
-  reset(stopMask, turnCount);
-  uint32_t currentPlayer = 0, allStopMask = (1 << (numPlayers)) - 1;
+  uint32_t stopMask, turnCount, allStopMask = (1 << (numPlayers)) - 1;
+  size_t currentPlayer = 0;
   bool newTurn = true;
 
-  // initialise the board
+  reset(stopMask, turnCount);
+
   renderer.drawBoard(this, showHands);
 
   while (!glfwWindowShouldClose(window.pWinGLFW))
@@ -117,10 +116,11 @@ int Blackjack::play(int numPlayers)
     {
       if (newTurn)
       {
+        newTurn = false;
+
         Log::add("-------------------------------\nTurn %u\n-------------------------------\n", turnCount++);
         renderer.drawBoard(this, showHands);
 
-        newTurn = false;
         if (!(stopMask & 1)) // if player 1 is still playing, prompt them
         {
           Log::add("Player %u, choose an action.\n", 1);
@@ -136,7 +136,7 @@ int Blackjack::play(int numPlayers)
 
         if (player.isAi)
         {
-          player.determineAction(this); // ai always draws for now
+          player.determineAction(this);
         }
 
         // user input here determines action taken
@@ -146,13 +146,8 @@ int Blackjack::play(int numPlayers)
           {
             Log::add("Player %u decided to HIT.\n", currentPlayer + 1);
             
-            // draw a card
-            uint32_t card = deck.draw();
-            player.hand.push_back(card);
+            player.hand.push_back(deck.draw());
 
-            //Log::add("Updated score is %u\n", score);
-
-            // check if bust
             if (player.getScore() > 21)
             {
               player.state = PlayerState::BUST;
@@ -162,15 +157,13 @@ int Blackjack::play(int numPlayers)
           }
           else if (player.action == Action::STAND)
           {
-            Log::add("Player %u decided to STAND.\n", currentPlayer + 1);
-            // don't draw any more cards
             player.state = PlayerState::STANDING;
             stopMask |= 1 << currentPlayer;
+            Log::add("Player %u decided to STAND.\n", currentPlayer + 1);
           }
 
           // reset player action and advance to next player
           player.action = Action::NONE;
-
           if (++currentPlayer == players.size())
           {
             newTurn = true;
@@ -181,7 +174,6 @@ int Blackjack::play(int numPlayers)
       else
       {
         player.action = Action::NONE;
-
         if (++currentPlayer == players.size())
         {
           newTurn = true;
@@ -193,8 +185,8 @@ int Blackjack::play(int numPlayers)
       if (stopMask == allStopMask)
       {
         Log::add("Finding winner...\n");
-        renderer.drawBoard(this, true);
         getWinners();
+        renderer.drawBoard(this, true);
       }
       else if (players.front().state == PlayerState::BUST) // Player 1 lost, play again?
       {
@@ -244,58 +236,152 @@ void Blackjack::getWinners()
 {
   uint32_t highestScore = 0, winnersMask = 0;
   bool needBlackjack = false;
-  
-  for (uint32_t i = 0; i < players.size(); ++i)
+  if (type == GameType::HOLE_CARD_GAME)
   {
-    if (players[i].state != PlayerState::BUST)
+    highestScore = dealer.getScore();
+    while (highestScore < 17) // dealer draws till score is greater than or equal to 17
     {
-      uint32_t playerScore = players[i].getScore();
-      if (playerScore > highestScore)
-      {
-        highestScore = playerScore;
-        winnersMask = 0; // reset mask
-        winnersMask |= 1 << i;
-      }
+      dealer.hand.push_back(deck.draw());
+      highestScore = dealer.getScore();
+    }
 
-      if (playerScore == 21)
+    if (highestScore > 21)
+    {
+      dealer.state = PlayerState::BUST;
+      Log::add("Dealer has gone bust!\n");
+      for (uint32_t i = 0; i < players.size(); ++i)
       {
-        size_t cardCount = players[i].hand.size();
-        if (cardCount == 2 && !needBlackjack)
-        {
-          winnersMask = 0; // first blackjack detected, invalidated previous non blackjack 21 scores
-          needBlackjack = true;
-        }
-
-        if (!needBlackjack)
+        if (players[i].state != PlayerState::BUST)
         {
           winnersMask |= 1 << i;
         }
-        else if (cardCount == 2)
+      }
+    }
+    else
+    {
+      Log::add("The dealer's score to beat is %u.\n", dealer.getScore());
+      if (dealer.hand.size() == 2 && highestScore == 21)
+      {
+        needBlackjack = true; // the dealer has a natural, another is needed to tie
+        Log::add("The dealer got a natural!\n");
+      }
+
+
+      if (needBlackjack)
+      {
+        for (uint32_t i = 0; i < players.size(); ++i)
         {
-          Log::add("Blackjack for player %u!\n", i + 1);
+          // conditions to tie with dealer
+          if (players[i].state != PlayerState::BUST && players[i].getScore() == 21 && players[i].hand.size() == 2)
+          {
+            winnersMask |= 1 << i;
+          }
+        }
+
+        // display tied players
+        for (uint32_t i = 0; i < players.size(); ++i)
+        {
+          if (winnersMask & (1 << i))
+          {
+            Log::add("Player %u tied with the dealer.\n", i + 1);
+          }
+        }
+      }
+      else
+      {
+        for (uint32_t i = 0; i < players.size(); ++i)
+        {
+          // conditions to beat the dealer
+          uint32_t playerScore = players[i].getScore();
+          if (players[i].state != PlayerState::BUST && playerScore > highestScore)
+          {
+            winnersMask |= 1 << i;
+          }
+          // conditions to tie with the dealer
+          else if (players[i].state != PlayerState::BUST && playerScore == highestScore)
+          {
+            if (highestScore == 21 && players[i].hand.size() == 2) // special case for 21
+            {
+              Log::add("Player %u got a natural!\n", i + 1); // a natural 21 beats other 21s
+              winnersMask |= 1 << i;
+            }
+            else
+            {
+              Log::add("Player %u tied with the dealer.\n", i + 1);
+            }
+          }
+        }
+      }
+    }
+
+    if (winnersMask == 0)
+    {
+      Log::add("Nobody beat the dealer, better luck next time!\n");
+    }
+    else
+    {
+      // display the winner
+      for (uint32_t i = 0; i < players.size(); ++i)
+      {
+        if (winnersMask & (1 << i))
+        {
+          Log::add("Player %u beat the dealer!\n", i + 1);
+        }
+      }
+    }
+  }
+  else if (type == GameType::NO_DEALER)
+  {
+    for (uint32_t i = 0; i < players.size(); ++i)
+    {
+      if (players[i].state != PlayerState::BUST)
+      {
+        uint32_t playerScore = players[i].getScore();
+        if (playerScore > highestScore)
+        {
+          highestScore = playerScore;
+          winnersMask = 0; // reset mask
+          winnersMask |= 1 << i;
+        }
+
+        if (playerScore == 21)
+        {
+          if (players[i].hand.size() == 2 && !needBlackjack)
+          {
+            winnersMask = 0; // first blackjack detected, invalidated previous non blackjack 21 scores
+            needBlackjack = true;
+          }
+
+          if (!needBlackjack)
+          {
+            winnersMask |= 1 << i;
+          }
+          else if (players[i].hand.size() == 2)
+          {
+            Log::add("Blackjack for player %u!\n", i + 1);
+            winnersMask |= 1 << i;
+          }
+        }
+        else if (playerScore == highestScore)
+        {
           winnersMask |= 1 << i;
         }
       }
-      else if (playerScore == highestScore) 
+    }
+    Log::add("The score to beat was %u.\n", highestScore);
+
+    if (_mm_popcnt_u32(winnersMask) > 1) // if we have multiple winners check for ties
+    {
+      Log::add("It's a tie!\n");
+    }
+
+    // display the winner
+    for (uint32_t i = 0; i < players.size(); ++i)
+    {
+      if (winnersMask & (1 << i))
       {
-        winnersMask |= 1 << i;
+        Log::add("Player %u wins!\n", i + 1);
       }
     }
-  }
-
-  Log::add("The score to beat was %u.\n", highestScore);
-
-  // if we have multiple winners check for ties
-  if (_mm_popcnt_u32(winnersMask) > 1)
-  {
-    Log::add("It's a tie!\n");
-  }
-
-  for (uint32_t i = 0; i < players.size(); ++i)
-  {
-    if (winnersMask & (1 << i))
-    {
-      Log::add("Congratulations player %u!\n", i + 1);
-    }
-  }
+  }  
 }
