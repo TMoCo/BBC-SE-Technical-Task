@@ -18,59 +18,6 @@ Blackjack::Blackjack()
   : type{ GameType::NO_DEALER }, newGame{ false }, showHands{ false } 
 {}
 
-int Blackjack::init()
-{
-  if (!glfwInit())
-  {
-    ERROR_MSG("Failed to initialise GLFW.", __FILE__, __LINE__);
-    return -1;
-  }
-
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-  window = { DEFAULT_WIDTH, DEFAULT_HEIGHT, "Blackjack" };
-  glfwSetWindowUserPointer(window.pWinGLFW, &window);
-
-  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-  {
-    ERROR_MSG("Failed to initialise Glad.", __FILE__, __LINE__);
-    return -1;
-  }
-
-  UserInterface::get().init(&window);
-
-  return 0;
-}
-
-void Blackjack::reset(uint32_t& stopMask, uint32_t& turnCount)
-{
-  deck.shuffle();
-
-  Log::get()->clear();
-  Log::add("-------------------------------\nNew game started!\nAll players draw two cards.\n");
-
-  dealer.reset();
-
-  for (int i = 0; i < players.size(); ++i)
-  {
-    players[i].reset();
-    players[i].hand.push_back(deck.draw());
-  }
-  dealer.hand.push_back(deck.draw());
-
-  for (int i = 0; i < players.size(); ++i)
-  {
-    players[i].hand.push_back(deck.draw());
-  }
-  dealer.hand.push_back(deck.draw());
-
-  stopMask = 0;
-  turnCount = 1;
-  newGame = false;
-}
-
 int Blackjack::play(int numPlayers)
 {
   if (numPlayers > MAX_NUM_PLAYERS || numPlayers < MIN_NUM_PLAYERS)
@@ -92,13 +39,12 @@ int Blackjack::play(int numPlayers)
   players.resize((size_t)numPlayers);
   players.front().isAi = false;
 
-  // reset game management
-  uint32_t stopMask, turnCount, allStopMask = (1 << (numPlayers)) - 1;
-  size_t currentPlayer = 0;
-  bool newTurn = true;
-
+  const uint32_t allStopMask = (1 << (numPlayers)) - 1; // mask determines if player still in game
+  uint32_t stopMask, turnCount;
   reset(stopMask, turnCount);
 
+  size_t currentPlayer = 0;
+  bool newTurn = true;
   renderer.drawBoard(this, showHands);
 
   while (!glfwWindowShouldClose(window.pWinGLFW))
@@ -117,8 +63,7 @@ int Blackjack::play(int numPlayers)
 
         if (!(stopMask & 1)) // if player 1 is still playing, prompt them
         {
-          Log::add("Player %u, choose an action.\n", 1);
-          Log::add("Your current score is %u.\n", players.front().getScore());
+          Log::add("Player %u, choose an action.\nYour current score is %u.\n", 1, players.front().getScore());
         }
       }
 
@@ -137,7 +82,7 @@ int Blackjack::play(int numPlayers)
           if (player.action == Action::HIT)
           {
             Log::add("Player %u decided to HIT.\n", currentPlayer + 1);
-            
+
             player.hand.push_back(deck.draw());
 
             if (player.getScore() > 21)
@@ -197,7 +142,7 @@ int Blackjack::play(int numPlayers)
       newTurn = true;
     }
 
-    // bind default framebuffer for drawing gui
+    // bind default framebuffer (the window) for drawing gui
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -214,6 +159,59 @@ int Blackjack::play(int numPlayers)
 
   return 0;
 }
+int Blackjack::init()
+{
+  if (!glfwInit())
+  {
+    ERROR_MSG("Failed to initialise GLFW.", __FILE__, __LINE__);
+    return -1;
+  }
+
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+  window = { DEFAULT_WIDTH, DEFAULT_HEIGHT, "Blackjack" };
+  glfwSetWindowUserPointer(window.pWinGLFW, &window);
+
+  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+  {
+    ERROR_MSG("Failed to initialise Glad.", __FILE__, __LINE__);
+    return -1;
+  }
+
+  UserInterface::get().init(&window);
+
+  return 0;
+}
+
+void Blackjack::reset(uint32_t& stopMask, uint32_t& turnCount)
+{
+  deck.shuffle();
+
+  Log::get()->clear();
+  Log::add("-------------------------------\nNew game started!\n%s\nAll players draw two cards.\n", GAME_TYPE_STRINGS[type]);
+
+  dealer.reset();
+
+  for (int i = 0; i < players.size(); ++i)
+  {
+    players[i].reset();
+    players[i].hand.push_back(deck.draw());
+  }
+  dealer.hand.push_back(deck.draw());
+
+  for (int i = 0; i < players.size(); ++i)
+  {
+    players[i].hand.push_back(deck.draw());
+  }
+  dealer.hand.push_back(deck.draw());
+
+  stopMask = 0;
+  turnCount = 1;
+  newGame = false;
+}
+
 
 void Blackjack::terminate()
 {
@@ -266,6 +264,7 @@ void Blackjack::getWinners()
           // conditions to tie with dealer
           if (players[i].state != PlayerState::BUST && players[i].getScore() == 21 && players[i].hand.size() == 2)
           {
+            Log::add("Player %u got a natural!\n", i + 1);
             winnersMask |= 1 << i;
           }
         }
@@ -310,9 +309,8 @@ void Blackjack::getWinners()
     {
       Log::add("Nobody beat the dealer, better luck next time!\n");
     }
-    else
+    else if (!needBlackjack) // if we needed a natural, the best players can hope for is a tie
     {
-      // display the winner
       for (uint32_t i = 0; i < players.size(); ++i)
       {
         if (winnersMask & (1 << i))

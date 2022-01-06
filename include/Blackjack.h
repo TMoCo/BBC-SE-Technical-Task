@@ -23,6 +23,12 @@ enum GameType : uint32_t
   HOLE_CARD_GAME,
 };
 
+constexpr const char* GAME_TYPE_STRINGS[2] =
+{
+  "The person with the highest score wins.",
+  "Beat the dealer's score to win."
+};
+
 class Blackjack
 {
   friend class UserInterface;

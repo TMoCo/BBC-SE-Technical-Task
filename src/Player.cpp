@@ -77,7 +77,7 @@ Action Player::determineAction(Blackjack* game)
   {
     if (hasAces())
     {
-      score = getScoreNoAces();
+      score = getScoreWithoutAces();
       if (score < 7)
       {
         action = Action::HIT;
