@@ -1,5 +1,7 @@
 # BBC Software Engineering Graduate Scheme Technical Task
 
+<img src="https://media.giphy.com/media/LLEYOaKK5HJlcQUxUx/giphy.gif" alt="V1 Screenshot"/><img src="https://media.giphy.com/media/ZORwQWE8lAs2mIBIby/giphy.gif" alt="V1 Screenshot"/>
+
 ## Overview
 The given task is to make a program that plays the game of Blackjack.
 
