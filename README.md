@@ -178,3 +178,9 @@ Other players will choose to either hit or draw depending on their hand's score 
 
 <img src="https://user-images.githubusercontent.com/56483943/148238338-41509c23-15f1-43e3-9a83-80993409e3d8.png" alt="Against the dealer" width="100%"/>
 <img src="https://user-images.githubusercontent.com/56483943/148238457-ea419fce-3461-4199-a2e3-982ed5b085d2.png" alt="Against other players" width="100%"/>
+
+## Libraries used
+- GLFW window API
+- GLAD OpenGl loader
+- ImGui immediate mode gui
+- Thomath personal 3D maths library
